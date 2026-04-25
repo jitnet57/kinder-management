@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, Download, FileText, Calendar, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Edit, Save, X } from "lucide-react"
 import { exportCompletionToExcel } from '../utils/exportUtils';
 import { useCurriculum } from '../context/CurriculumContext';
 

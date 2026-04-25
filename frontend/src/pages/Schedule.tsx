@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Download, FileText, Trash2, Edit, Save, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Download, FileText, Trash2, Edit } from "lucide-react"-react';
 import { useSchedule } from '../context/ScheduleContext';
 import { exportScheduleToExcel, exportScheduleToWord } from '../utils/exportUtils';
 
@@ -22,7 +22,7 @@ const getChildById = (id: string) => CHILDREN_LIST.find(c => c.id === id);
 
 export function Schedule() {
   const { sessions, addSession, updateSession, deleteSession, getSessionsByDayAndSlot } = useSchedule();
-  const [selectedCount, setSelectedCount] = useState(0);
+  const [selectedCount] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ day: number; slot: number } | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
@@ -188,7 +188,7 @@ export function Schedule() {
                   <td className="px-6 py-4 text-xs font-semibold text-gray-600 bg-white bg-opacity-20">
                     {slot.label}
                   </td>
-                  {DAYS.map((_, dayIdx) => {
+                  {DAYS.map(( dayIdx) => {
                     const daySessions = getSessionsByDayAndSlot(dayIdx, slotIdx);
                     return (
                       <td

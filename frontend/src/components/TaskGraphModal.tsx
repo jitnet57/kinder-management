@@ -36,7 +36,7 @@ export function TaskGraphModal({ isOpen, onClose, taskId, childId }: TaskGraphMo
   const sto = lto?.stos.find(s => s.id === currentTask.stoId);
 
   // 차트 데이터 준비
-  const chartData = relatedTasks.map((task, idx) => ({
+  const chartData = relatedTasks.map((task) => ({
     date: new Date(task.completedAt || '').toLocaleDateString('ko-KR', {
       month: 'numeric',
       day: 'numeric'
@@ -184,7 +184,7 @@ export function TaskGraphModal({ isOpen, onClose, taskId, childId }: TaskGraphMo
                   </tr>
                 </thead>
                 <tbody>
-                  {relatedTasks.map((task, idx) => (
+                  {relatedTasks.map((task) => (
                     <tr key={task.id} className="border-b border-white border-opacity-20 hover:bg-white hover:bg-opacity-30 last:border-0 transition">
                       <td className="px-4 py-3 text-sm text-gray-700">
                         {new Date(task.completedAt || '').toLocaleDateString('ko-KR')}

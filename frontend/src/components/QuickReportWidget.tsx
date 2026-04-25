@@ -3,8 +3,8 @@
  * Dashboard 우측에 표시되는 미니 리포트
  */
 
-import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface QuickReport {
   title: string;
@@ -39,7 +39,7 @@ export function QuickReportWidget() {
         return;
       }
 
-      const data = await response.json();
+      // const data = await response.json();
       // API 응답 처리
       setSampleReport();
     } catch (err) {

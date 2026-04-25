@@ -61,7 +61,7 @@ const COLORS = ['#FFB6D9', '#B4D7FF', '#C1FFD7', '#FFE4B5', '#D7C1FF', '#FFD7E4'
 export function Children() {
   const [children, setChildren] = useState<Child[]>(MOCK_CHILDREN);
   const [searchQuery, setSearchQuery] = useState('');
-  const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const [setUploadingId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editForm, setEditForm] = useState<Child | null>(null);

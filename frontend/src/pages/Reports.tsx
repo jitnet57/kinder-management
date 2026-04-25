@@ -387,7 +387,7 @@ export function Reports() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{reportData.chart.title}</h2>
               <p className="text-gray-600 mt-1">
-                생성: {new Date(reportData.timestamp).toLocaleString('ko-KR')}
+                생성: {new Date().toLocaleString('ko-KR')}
               </p>
             </div>
             <div className="flex gap-2">

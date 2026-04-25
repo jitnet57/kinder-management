@@ -36,28 +36,6 @@ export function useAutoSave<T>(
   const debounceTimer = useRef<NodeJS.Timeout>();
   const isOnline = useRef(navigator.onLine);
 
-  // 온라인 상태 감지
-  useEffect(() => {
-    const handleOnline = () => {
-      isOnline.current = true;
-      if (syncToServer) {
-        performSync();
-      }
-    };
-
-    const handleOffline = () => {
-      isOnline.current = false;
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [syncToServer]);
-
   // 서버에 동기화
   const performSync = useCallback(async () => {
     if (!isOnline.current) return;
@@ -79,6 +57,28 @@ export function useAutoSave<T>(
       onSyncError?.(error as Error);
     }
   }, [onSyncError, onSyncSuccess]);
+
+  // 온라인 상태 감지
+  useEffect(() => {
+    const handleOnline = () => {
+      isOnline.current = true;
+      if (syncToServer) {
+        performSync();
+      }
+    };
+
+    const handleOffline = () => {
+      isOnline.current = false;
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [syncToServer, performSync]);
 
   // 상태 업데이트 (자동 저장 포함)
   const setValue = useCallback((newValue: T | ((prev: T) => T)) => {
