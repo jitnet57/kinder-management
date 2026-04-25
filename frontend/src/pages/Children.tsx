@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Edit, Trash2, Plus, Search, Upload, X, Save } from 'lucide-react';
+import { ChildDetailView } from '../components/ChildDetailView';
 // import { exportChildrenToExcel, exportChildrenToWord } from '../utils/exportUtils';
 
 interface Child {
@@ -64,6 +65,7 @@ export function Children() {
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [editForm, setEditForm] = useState<Child | null>(null);
   const [newChildForm, setNewChildForm] = useState({
     name: '',
@@ -148,6 +150,11 @@ export function Children() {
       color: COLORS[0],
     });
   };
+
+  // 선택된 아동 상세 정보 표시
+  if (selectedChild) {
+    return <ChildDetailView child={selectedChild} onBack={() => setSelectedChild(null)} />;
+  }
 
   return (
     <div>
@@ -273,7 +280,8 @@ export function Children() {
           return (
             <div
               key={child.id}
-              className="glass rounded-2xl overflow-hidden hover:opacity-80 transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => !isEditing && setSelectedChild(child)}
+              className="glass rounded-2xl overflow-hidden hover:opacity-80 transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
             >
               {/* 헤더 색상 바 */}
               <div
