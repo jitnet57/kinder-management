@@ -33,7 +33,7 @@ export function useAutoSave<T>(
   const [state, setState] = useState<T>(initialValue);
   const [saved, setSaved] = useState(false);
   const [synced, setSynced] = useState(false);
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
   const isOnline = useRef(navigator.onLine);
 
   // 서버에 동기화
@@ -42,7 +42,7 @@ export function useAutoSave<T>(
 
     try {
       const synced = await syncQueue.syncToServer(
-        process.env.REACT_APP_API_URL || 'http://localhost:3000',
+        (import.meta.env.VITE_API_URL as string) || 'http://localhost:3000',
         localStorage.getItem('authToken') || ''
       );
 
@@ -145,7 +145,7 @@ export function useAutoSaveMultiple<T extends Record<string, any>>(
 
   const [state, setState] = useState<T>(initialValues);
   const [saved, setSaved] = useState(false);
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // 전체 상태 업데이트
   const update = useCallback(
