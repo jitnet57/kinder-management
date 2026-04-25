@@ -16,7 +16,6 @@ import {
   ScatterChart, Scatter, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { useAutoSave } from '../hooks/useAutoSave';
 
 interface ChartOption {
   value: string;
@@ -56,14 +55,6 @@ export function Reports() {
   // 날짜 범위 (CUSTOM 선택시)
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-
-  // 자동 저장
-  const [settings, setSetting] = useAutoSave('reportSettings', {
-    chartType,
-    timeRange,
-    groupBy,
-    childId,
-  });
 
   // 옵션 조회
   useEffect(() => {
@@ -125,14 +116,6 @@ export function Reports() {
 
       const data: ReportData = await response.json();
       setReportData(data);
-
-      // 설정 저장
-      setSetting({
-        chartType,
-        timeRange,
-        groupBy,
-        childId,
-      });
     } catch (err) {
       setError(err instanceof Error ? err.message : '보고서 생성 실패');
     } finally {

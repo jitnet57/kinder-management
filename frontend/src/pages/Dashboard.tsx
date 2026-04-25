@@ -371,13 +371,23 @@ export function Dashboard() {
         ].map(stat => (
           <div
             key={stat.label}
-            className={`glass rounded-2xl p-6 bg-gradient-to-br ${stat.color} text-white hover:shadow-lg transition-all transform hover:scale-105`}
+            className={`glass rounded-2xl p-6 bg-gradient-to-br ${stat.color} text-white hover:shadow-lg transition-all transform hover:scale-105 group relative`}
           >
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium opacity-90">{stat.label}</p>
               <span className="text-2xl">{stat.icon}</span>
             </div>
             <p className="text-3xl font-bold">{stat.value}</p>
+
+            {/* 호버 메뉴 */}
+            <div className="absolute inset-0 rounded-2xl bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+              <button className="p-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition text-white font-semibold text-sm">
+                상세보기
+              </button>
+              <button className="p-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition text-white font-semibold text-sm">
+                내보내기
+              </button>
+            </div>
           </div>
         ))}
       </div>
