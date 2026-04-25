@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Download, FileText, Trash2, Edit } from "lucide-react"-react';
+import { ChevronLeft, ChevronRight, Plus, Download, FileText, Trash2, Edit } from 'lucide-react';
 import { useSchedule } from '../context/ScheduleContext';
 import { exportScheduleToExcel, exportScheduleToWord } from '../utils/exportUtils';
 
