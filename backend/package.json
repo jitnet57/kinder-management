@@ -1,0 +1,42 @@
+{
+  "name": "aba-child-backend",
+  "version": "1.0.0",
+  "description": "ABA Child Management System Backend API",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "preview": "node dist/index.js",
+    "lint": "eslint src/**/*.ts"
+  },
+  "keywords": ["aba", "child-management", "api"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "pg": "^8.12.0",
+    "pg-format": "^1.0.4",
+    "aes-js": "^3.1.1",
+    "uuid": "^10.0.0",
+    "multer": "^1.4.5-lts.1",
+    "compression": "^1.7.4",
+    "helmet": "^7.2.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.23",
+    "@types/node": "^24.12.2",
+    "@types/cors": "^2.8.18",
+    "@types/uuid": "^10.0.2",
+    "@types/multer": "^1.4.12",
+    "typescript": "~6.0.2",
+    "ts-node": "^10.9.2",
+    "eslint": "^10.2.1",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2"
+  }
+}

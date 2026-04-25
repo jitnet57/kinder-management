@@ -1,0 +1,74 @@
+general:
+  - id: GEN-001
+    rule: 함수는 단일 책임 원칙을 따른다. 50줄을 넘으면 분리를 검토한다.
+    stacks: [all]
+  - id: GEN-002
+    rule: 매직 넘버를 사용하지 않는다. 상수로 선언한다.
+    stacks: [all]
+  - id: GEN-003
+    rule: 에러 핸들링은 발생 지점에서 처리한다. 호출자에게 무조건 위임하지 않는다.
+    stacks: [all]
+  - id: GEN-004
+    rule: 함수/변수명은 명확하고 선언적이다. 축약어를 최소화한다.
+    stacks: [all]
+  - id: GEN-005
+    rule: 불필요한 주석을 작성하지 않는다. 왜(Why)를 설명할 때만 작성한다.
+    stacks: [all]
+
+typescript:
+  - id: TS-001
+    rule: any 타입 사용을 금지한다. 불가피한 경우 unknown을 사용하고 타입 가드를 작성한다.
+    stacks: [typescript]
+  - id: TS-002
+    rule: 인터페이스 네이밍에 I 접두사를 사용하지 않는다.
+    stacks: [typescript]
+  - id: TS-003
+    rule: enum 대신 as const 객체를 사용한다.
+    stacks: [typescript]
+  - id: TS-004
+    rule: 타입 추론이 명확한 경우 명시적 타입 주석을 생략해도 된다.
+    stacks: [typescript]
+
+react:
+  - id: REACT-001
+    rule: 컴포넌트는 한 가지 역할만 한다. Props drilling 발생 시 Context 또는 상태 관리 도입을 검토한다.
+    stacks: [react]
+  - id: REACT-002
+    rule: useEffect는 side effect 관리에만 사용한다. 조건문으로 render 로직을 제어하지 않는다.
+    stacks: [react]
+  - id: REACT-003
+    rule: useCallback, useMemo는 성능 측정 후에만 사용한다. 기본은 최적화하지 않는다.
+    stacks: [react]
+  - id: REACT-004
+    rule: 비제어 컴포넌트를 기본으로 한다. 필요시에만 제어 컴포넌트로 전환한다.
+    stacks: [react]
+
+tailwind:
+  - id: TAIL-001
+    rule: 공통 스타일은 컴포넌트로 추상화한다. className 복사-붙여넣기를 최소화한다.
+    stacks: [tailwind]
+  - id: TAIL-002
+    rule: 커스텀 색상/크기는 tailwind.config에 정의한다. 하드코딩하지 않는다.
+    stacks: [tailwind]
+  - id: TAIL-003
+    rule: @apply는 CSS 복잡도가 높을 때만 사용한다. 대부분의 경우 className으로 충분하다.
+    stacks: [tailwind]
+
+nodejs:
+  - id: NODE-001
+    rule: 환경 변수는 .env.local에 정의한다. Git에 커밋하지 않는다.
+    stacks: [nodejs]
+  - id: NODE-002
+    rule: 의존성 버전 업그레이드 시 Lock 파일을 반드시 커밋한다.
+    stacks: [nodejs]
+
+frontend:
+  - id: FE-001
+    rule: API 호출은 전용 hook 또는 service 레이어에서 관리한다.
+    stacks: [frontend]
+  - id: FE-002
+    rule: 상태 업데이트는 한 곳에서만 관리한다. 동기화 문제를 사전에 방지한다.
+    stacks: [frontend]
+  - id: FE-003
+    rule: 포커스 관리 및 접근성을 고려한다. 키보드 네비게이션이 가능해야 한다.
+    stacks: [frontend]

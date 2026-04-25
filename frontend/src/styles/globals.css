@@ -1,0 +1,55 @@
+body {
+  background: linear-gradient(135deg, #f5f3ff 0%, #fce7f3 25%, #e0f2fe 50%, #f3e8ff 75%, #f5f3ff 100%);
+  background-attachment: fixed;
+}
+
+/* 글래스 모르피즘 기본 클래스 */
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.glass:hover {
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* 진한 글래스 */
+.glass-dark {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* 입력 필드 */
+.glass-input {
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(139, 125, 193, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(139, 125, 193, 0.1) !important;
+}
+
+/* 버튼 글래스 */
+.glass-button {
+  background: linear-gradient(135deg, rgba(139, 125, 193, 0.8), rgba(168, 216, 216, 0.8));
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: white;
+  box-shadow: 0 8px 24px rgba(139, 125, 193, 0.2);
+  transition: all 0.3s ease;
+}
+
+.glass-button:hover {
+  background: linear-gradient(135deg, rgba(139, 125, 193, 0.9), rgba(168, 216, 216, 0.9));
+  box-shadow: 0 12px 32px rgba(139, 125, 193, 0.3);
+  transform: translateY(-2px);
+}

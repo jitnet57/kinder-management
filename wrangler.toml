@@ -1,0 +1,41 @@
+name = "aba-child"
+main = "dist/index.js"
+type = "javascript"
+
+[env.production]
+name = "aba-child"
+route = "aba-child.pages.dev"
+zone_id = "YOUR_ZONE_ID"
+
+[env.staging]
+name = "aba-child-staging"
+route = "aba-child-staging.pages.dev"
+
+[build]
+command = "cd frontend && npm install && npm run build && cd .."
+cwd = "."
+
+[build.upload]
+dir = "frontend/dist"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_KV_NAMESPACE_ID"
+
+[[env.staging.kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_STAGING_KV_NAMESPACE_ID"
+
+[env.production.vars]
+API_URL = "https://api.aba-child.pages.dev"
+ENVIRONMENT = "production"
+BACKUP_ENCRYPTION = "true"
+
+[env.staging.vars]
+API_URL = "http://localhost:3000"
+ENVIRONMENT = "staging"
+BACKUP_ENCRYPTION = "true"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["BackupLog", "RestoreLog", "SyncHistory"]

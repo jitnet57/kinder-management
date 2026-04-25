@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AKMS - 아동관리 ABA 데이터 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'pastel-purple': '#8B7DC1',
+              'pastel-teal': '#A8D8D8',
+              'pastel-pink': '#F7B8C8',
+              'pastel-neutral': '#F5F3FF',
+              'child': {
+                1: '#FFB6D9',
+                2: '#B4D7FF',
+                3: '#C1FFD7',
+                4: '#FFE4B5',
+                5: '#E6D7FF',
+                6: '#FFD9B3',
+                7: '#D4F1F4',
+                8: '#FFE6CC',
+              }
+            },
+            backdropBlur: {
+              'xl': '20px',
+              '2xl': '30px',
+            }
+          }
+        }
+      }
+    </script>
+    <script>
+      // 글래스 모르피즘 CSS를 동적으로 주입
+      const css = `
+        body {
+          background: linear-gradient(135deg, #f5f3ff 0%, #fce7f3 25%, #e0f2fe 50%, #f3e8ff 75%, #f5f3ff 100%);
+          background-attachment: fixed;
+        }
+
+        .glass {
+          background: rgba(255, 255, 255, 0.6);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.7);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        .glass:hover {
+          background: rgba(255, 255, 255, 0.65);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .glass-dark {
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(15px);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-input {
+          background: rgba(255, 255, 255, 0.5) !important;
+          backdrop-filter: blur(10px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.6) !important;
+          transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+          background: rgba(255, 255, 255, 0.7) !important;
+          border-color: rgba(139, 125, 193, 0.5) !important;
+          box-shadow: 0 0 0 3px rgba(139, 125, 193, 0.1) !important;
+        }
+
+        .glass-button {
+          background: linear-gradient(135deg, rgba(139, 125, 193, 0.8), rgba(168, 216, 216, 0.8));
+          backdrop-filter: blur(15px);
+          border: 1px solid rgba(255, 255, 255, 0.6);
+          color: white;
+          box-shadow: 0 8px 24px rgba(139, 125, 193, 0.2);
+          transition: all 0.3s ease;
+        }
+
+        .glass-button:hover {
+          background: linear-gradient(135deg, rgba(139, 125, 193, 0.9), rgba(168, 216, 216, 0.9));
+          box-shadow: 0 12px 32px rgba(139, 125, 193, 0.3);
+          transform: translateY(-2px);
+        }
+      `;
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    </script>
+  </head>
+  <body class="bg-pastel-neutral">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
