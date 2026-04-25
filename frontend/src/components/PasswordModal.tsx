@@ -7,7 +7,7 @@
  * 3. 변경: 기존 비밀번호 변경
  */
 
-import React, { useState, useCallback } from 'react';
+import { useState } from 'react';
 import {
   validatePassword,
   setStoragePassword,
