@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ArrowLeft } from 'lucide-react';
-import { useCurriculum } from '../context/CurriculumContext';
+import { ArrowLeft, Edit2, Trash2, Save, X, BarChart3 } from 'lucide-react';
+import { useCurriculum, SessionTask } from '../context/CurriculumContext';
+import { TaskGraphModal } from './TaskGraphModal';
 
 interface Child {
   id: number;
@@ -20,39 +20,59 @@ interface ChildDetailViewProps {
 }
 
 export function ChildDetailView({ child, onBack }: ChildDetailViewProps) {
-  const { completionTasks } = useCurriculum();
-  const [activeTab, setActiveTab] = useState<'progress' | 'stats' | 'overall'>('progress');
+  const { sessionTasks, updateSessionTask, deleteSessionTask, domains } = useCurriculum();
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<SessionTask> | null>(null);
+  const [showGraphModal, setShowGraphModal] = useState(false);
+  const [selectedTaskForGraph, setSelectedTaskForGraph] = useState<SessionTask | null>(null);
 
-  // 아동의 완료 과제 필터링
-  const childTasks = completionTasks.filter(task => task.childId === child.name);
+  // 아동의 과제 필터링
+  const childTasks = sessionTasks.filter(task => task.childId === child.name);
 
-  // 계산 데이터
-  const totalSessions = childTasks.length;
-  const avgScore = childTasks.length > 0
-    ? Math.round(childTasks.reduce((sum, task) => sum + task.score, 0) / childTasks.length)
-    : 0;
+  // 도메인명 찾기
+  const getDomainName = (domainId: string) => {
+    return domains.find(d => d.id === domainId)?.name || '선택안함';
+  };
 
-  // 진도 추적용 차트 데이터
-  const progressData = childTasks.slice(-7).map((task, idx) => ({
-    date: `일 ${idx + 1}`,
-    score: task.score,
-    completedAt: task.completedAt,
-  }));
+  // LTO명 찾기
+  const getLTOName = (domainId: string, ltoId: string) => {
+    const domain = domains.find(d => d.id === domainId);
+    return domain?.ltos.find(l => l.id === ltoId)?.name || '선택안함';
+  };
 
-  // 발달영역별 점수
-  const domainScores = completionTasks
-    .filter(task => task.childId === child.name)
-    .reduce((acc: Record<string, number[]>, task) => {
-      const key = task.domainId;
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(task.score);
-      return acc;
-    }, {});
+  // STO명 찾기
+  const getSTOName = (domainId: string, ltoId: string, stoId: string) => {
+    const domain = domains.find(d => d.id === domainId);
+    const lto = domain?.ltos.find(l => l.id === ltoId);
+    return lto?.stos.find(s => s.id === stoId)?.name || '선택안함';
+  };
 
-  const domainChartData = Object.entries(domainScores).map(([domainId, scores]) => ({
-    name: domainId,
-    avg: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
-  }));
+  const handleEditTask = (task: SessionTask) => {
+    setEditingTaskId(task.id);
+    setEditForm({ ...task });
+  };
+
+  const handleSaveTask = () => {
+    if (!editingTaskId || !editForm) return;
+    updateSessionTask(editingTaskId, {
+      score: editForm.score || 0,
+      notes: editForm.notes || '',
+      date: editForm.date || '',
+    });
+    setEditingTaskId(null);
+    setEditForm(null);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (confirm('이 과제를 삭제하시겠습니까?')) {
+      deleteSessionTask(taskId);
+    }
+  };
+
+  const handleShowGraph = (task: SessionTask) => {
+    setSelectedTaskForGraph(task);
+    setShowGraphModal(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -78,138 +98,161 @@ export function ChildDetailView({ child, onBack }: ChildDetailViewProps) {
         </div>
       </div>
 
-      {/* 탭 */}
-      <div className="flex gap-2 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('progress')}
-          className={`px-6 py-3 font-semibold border-b-2 transition ${
-            activeTab === 'progress'
-              ? 'border-pastel-purple text-pastel-purple'
-              : 'border-transparent text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          📈 진도 추적
-        </button>
-        <button
-          onClick={() => setActiveTab('stats')}
-          className={`px-6 py-3 font-semibold border-b-2 transition ${
-            activeTab === 'stats'
-              ? 'border-pastel-purple text-pastel-purple'
-              : 'border-transparent text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          📊 아이별 진도
-        </button>
-        <button
-          onClick={() => setActiveTab('overall')}
-          className={`px-6 py-3 font-semibold border-b-2 transition ${
-            activeTab === 'overall'
-              ? 'border-pastel-purple text-pastel-purple'
-              : 'border-transparent text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          📋 전체 통계
-        </button>
+      {/* 과제 카드 목록 */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-gray-800">📝 과제 기록</h2>
+
+        {childTasks.length === 0 ? (
+          <div className="glass rounded-2xl p-12 text-center text-gray-500">
+            <p>기록된 과제가 없습니다.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {childTasks.map(task => {
+              const isEditing = editingTaskId === task.id;
+
+              return (
+                <div
+                  key={task.id}
+                  className={`glass rounded-2xl p-6 border-l-4 transition-all ${
+                    isEditing ? 'border-pastel-purple' : 'border-gray-300'
+                  }`}
+                  style={{
+                    borderLeftColor: isEditing ? child.color : '#ccc',
+                  }}
+                >
+                  {isEditing ? (
+                    // 편집 모드
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            점수
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={editForm?.score || 0}
+                            onChange={(e) =>
+                              setEditForm(prev => prev ? { ...prev, score: parseInt(e.target.value) } : null)
+                            }
+                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            날짜
+                          </label>
+                          <input
+                            type="date"
+                            value={editForm?.date || ''}
+                            onChange={(e) =>
+                              setEditForm(prev => prev ? { ...prev, date: e.target.value } : null)
+                            }
+                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          비고
+                        </label>
+                        <textarea
+                          value={editForm?.notes || ''}
+                          onChange={(e) =>
+                            setEditForm(prev => prev ? { ...prev, notes: e.target.value } : null)
+                          }
+                          placeholder="관찰 내용, 특이사항 등을 입력하세요..."
+                          rows={4}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple resize-none"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveTask}
+                          className="flex items-center gap-2 flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold transition"
+                        >
+                          <Save size={18} />
+                          저장
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingTaskId(null);
+                            setEditForm(null);
+                          }}
+                          className="flex items-center gap-2 flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold transition"
+                        >
+                          <X size={18} />
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // 보기 모드
+                    <div>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-lg font-bold text-gray-800">
+                              {getDomainName(task.domainId)} {'>'} {getLTOName(task.domainId, task.ltoId)} {'>'} {getSTOName(task.domainId, task.ltoId, task.stoId)}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                            <span className="font-semibold">점수: <span className="text-lg text-pastel-purple">{task.score}점</span></span>
+                            <span>날짜: {new Date(task.date).toLocaleDateString('ko-KR')}</span>
+                          </div>
+                          {task.notes && (
+                            <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{task.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleShowGraph(task)}
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition text-sm"
+                        >
+                          <BarChart3 size={16} />
+                          그래프
+                        </button>
+                        <button
+                          onClick={() => handleEditTask(task)}
+                          className="flex items-center gap-2 px-4 py-2 bg-pastel-purple text-white rounded-lg hover:bg-opacity-90 font-semibold transition text-sm"
+                        >
+                          <Edit2 size={16} />
+                          수정
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold transition text-sm"
+                        >
+                          <Trash2 size={16} />
+                          삭제
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* 진도 추적 탭 */}
-      {activeTab === 'progress' && (
-        <div className="glass rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6">📈 진도 추적</h2>
-          {progressData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={progressData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="score"
-                  stroke={child.color}
-                  name="점수"
-                  strokeWidth={2}
-                  dot={{ fill: child.color, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              완료된 과제가 없습니다.
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 아이별 진도 탭 */}
-      {activeTab === 'stats' && (
-        <div className="glass rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6">📊 아이별 진도</h2>
-          <p className="text-gray-600 mb-6">아이를 선택하여 진도를 확인하세요.</p>
-          {domainChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={domainChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="avg" fill={child.color} name="평균 점수" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              데이터가 없습니다.
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 전체 통계 탭 */}
-      {activeTab === 'overall' && (
-        <div className="space-y-6">
-          <div className="glass rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-6">📋 전체 통계</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-pastel-purple to-pastel-pink rounded-lg p-6 text-white">
-                <p className="text-sm font-medium opacity-90">총 세션 시간</p>
-                <p className="text-3xl font-bold">{totalSessions}분</p>
-              </div>
-              <div className="bg-gradient-to-br from-pastel-blue to-pastel-purple rounded-lg p-6 text-white">
-                <p className="text-sm font-medium opacity-90">평균 세션 길이</p>
-                <p className="text-3xl font-bold">0분</p>
-              </div>
-              <div className="bg-gradient-to-br from-pastel-teal to-pastel-green rounded-lg p-6 text-white">
-                <p className="text-sm font-medium opacity-90">이번 주 세션</p>
-                <p className="text-3xl font-bold">{childTasks.filter(t => {
-                  const taskDate = new Date(t.completedAt || '');
-                  const weekAgo = new Date();
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  return taskDate >= weekAgo;
-                }).length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass rounded-2xl p-6">
-            <h2 className="text-lg font-bold mb-4">평균 점수: {avgScore}점</h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">점수 범위</span>
-                <span className="font-semibold">
-                  {childTasks.length > 0
-                    ? `${Math.min(...childTasks.map(t => t.score))} ~ ${Math.max(...childTasks.map(t => t.score))}`
-                    : '데이터 없음'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">총 완료 과제</span>
-                <span className="font-semibold">{totalSessions}개</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* 그래프 모달 */}
+      {selectedTaskForGraph && (
+        <TaskGraphModal
+          isOpen={showGraphModal}
+          taskId={selectedTaskForGraph.id}
+          childId={selectedTaskForGraph.childId}
+          onClose={() => setShowGraphModal(false)}
+        />
       )}
     </div>
   );
