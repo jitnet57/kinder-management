@@ -1,32 +1,8 @@
 name = "aba-child"
-type = "javascript"
 compatibility_date = "2024-01-01"
 
 [build]
 command = "cd frontend && npm install && npm run build"
 cwd = "."
 
-[pages_build_output_dir]
-dir = "frontend/dist"
-
-[[env.production.kv_namespaces]]
-binding = "CACHE"
-id = "YOUR_KV_NAMESPACE_ID"
-
-[[env.staging.kv_namespaces]]
-binding = "CACHE"
-id = "YOUR_STAGING_KV_NAMESPACE_ID"
-
-[env.production.vars]
-API_URL = "https://api.aba-child.pages.dev"
-ENVIRONMENT = "production"
-BACKUP_ENCRYPTION = "true"
-
-[env.staging.vars]
-API_URL = "http://localhost:3000"
-ENVIRONMENT = "staging"
-BACKUP_ENCRYPTION = "true"
-
-[[migrations]]
-tag = "v1"
-new_classes = ["BackupLog", "RestoreLog", "SyncHistory"]
+pages_build_output_dir = "frontend/dist"
