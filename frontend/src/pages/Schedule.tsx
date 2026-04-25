@@ -188,7 +188,7 @@ export function Schedule() {
                   <td className="px-6 py-4 text-xs font-semibold text-gray-600 bg-white bg-opacity-20">
                     {slot.label}
                   </td>
-                  {DAYS.map(( dayIdx) => {
+                  {DAYS.map((_, dayIdx) => {
                     const daySessions = getSessionsByDayAndSlot(dayIdx, slotIdx);
                     return (
                       <td
