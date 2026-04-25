@@ -155,20 +155,6 @@ export function Children() {
         <h2 className="text-3xl font-bold text-gray-800">👶 아동정보</h2>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => exportChildrenToExcel(children)}
-            className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold transition"
-          >
-            <Download size={20} />
-            Excel
-          </button>
-          <button
-            onClick={() => exportChildrenToWord(children)}
-            className="flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-semibold transition"
-          >
-            <FileText size={20} />
-            Word
-          </button>
-          <button
             onClick={() => setShowAddForm(true)}
             className="flex items-center gap-2 bg-pastel-purple text-white px-6 py-3 rounded-lg hover:bg-opacity-90 font-semibold transition"
           >
