@@ -1,5 +1,0 @@
-name = "aba-child"
-
-[env.production]
-name = "aba-child"
-route = "aba-child.pages.dev"
