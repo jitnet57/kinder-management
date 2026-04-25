@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Edit, Save, X, Download, CheckCircle2 } from 'lucide-react';
-import { exportCompletionToExcel } from '../utils/exportUtils';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Edit, Save, X, CheckCircle2 } from 'lucide-react';
+// import { exportCompletionToExcel } from '../utils/exportUtils';
 import { useCurriculum } from '../context/CurriculumContext';
 
 const CHILDREN = ['민준', '소영', '지호', '연서'];
@@ -61,15 +61,7 @@ export function Completion() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-bold text-gray-800">✅ 완료목록</h2>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => exportCompletionToExcel(exportData)}
-            className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold transition"
-          >
-            <Download size={20} />
-            Excel 내보내기
-          </button>
-        </div>
+        {/* Export feature coming soon */}
       </div>
 
       {/* 필터 */}

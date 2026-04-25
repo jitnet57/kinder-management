@@ -257,3 +257,13 @@ npm run prisma:reset  # 샘플 데이터 포함
 
 **마지막 업데이트**: 2026-04-26  
 **상태**: Phase 3 완료 ✓ | **다음**: Phase 4 개발 시작
+
+
+## 깃허브
+# https://github.com/jitnet57/kinder-management
+
+## 배포 
+
+https://dash.cloudflare.com/c0dccd0131e560697f98e0dd0825b833/workers/services/view/kinder-management/production
+
+jitnet57@gmail.com

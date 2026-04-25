@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Download, FileText, Trash2, Edit } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Edit } from 'lucide-react';
 import { useSchedule } from '../context/ScheduleContext';
-import { exportScheduleToExcel, exportScheduleToWord } from '../utils/exportUtils';
+// import { exportScheduleToExcel, exportScheduleToWord } from '../utils/exportUtils';
 
 const DAYS = ['월', '화', '수', '목', '금', '토'];
 const TIME_SLOTS = [
@@ -76,22 +76,7 @@ export function Schedule() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-bold text-gray-800">📅 주간 스케줄</h2>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => exportScheduleToExcel(mockSchedules, CHILDREN_LIST)}
-            className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold transition"
-          >
-            <Download size={20} />
-            Excel
-          </button>
-          <button
-            onClick={() => exportScheduleToWord(mockSchedules, CHILDREN_LIST)}
-            className="flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-semibold transition"
-          >
-            <FileText size={20} />
-            Word
-          </button>
-        </div>
+        {/* Export functionality coming soon */}
         <div className="flex items-center gap-4">
           <button className="p-2 hover:bg-gray-200 rounded">
             <ChevronLeft size={24} className="text-gray-600" />
