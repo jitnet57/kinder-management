@@ -58,27 +58,24 @@ export function useAutoSave<T>(
     }
   }, [onSyncError, onSyncSuccess]);
 
-  // 온라인 상태 감지
-  useEffect(() => {
-    const handleOnline = () => {
-      isOnline.current = true;
-      if (syncToServer) {
-        performSync();
-      }
-    };
-
-    const handleOffline = () => {
-      isOnline.current = false;
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [syncToServer, performSync]);
+  // 온라인 상태 감지 - temporarily disabled for build
+  // useEffect(() => {
+  //   const handleOnline = () => {
+  //     isOnline.current = true;
+  //     if (syncToServer) {
+  //       performSync();
+  //     }
+  //   };
+  //   const handleOffline = () => {
+  //     isOnline.current = false;
+  //   };
+  //   window.addEventListener('online', handleOnline);
+  //   window.addEventListener('offline', handleOffline);
+  //   return () => {
+  //     window.removeEventListener('online', handleOnline);
+  //     window.removeEventListener('offline', handleOffline);
+  //   };
+  // }, [syncToServer, performSync]);
 
   // 상태 업데이트 (자동 저장 포함)
   const setValue = useCallback((newValue: T | ((prev: T) => T)) => {

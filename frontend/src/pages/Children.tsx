@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Edit, Trash2, Plus, Search, Upload, X, Download, FileText, Save } from 'lucide-react';
-import { exportChildrenToExcel, exportChildrenToWord } from '../utils/exportUtils';
+import { Edit, Trash2, Plus, Search, Upload, X, Save } from 'lucide-react';
+// import { exportChildrenToExcel, exportChildrenToWord } from '../utils/exportUtils';
 
 interface Child {
   id: number;
@@ -61,7 +61,7 @@ const COLORS = ['#FFB6D9', '#B4D7FF', '#C1FFD7', '#FFE4B5', '#D7C1FF', '#FFD7E4'
 export function Children() {
   const [children, setChildren] = useState<Child[]>(MOCK_CHILDREN);
   const [searchQuery, setSearchQuery] = useState('');
-  const [setUploadingId] = useState<number | null>(null);
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editForm, setEditForm] = useState<Child | null>(null);
