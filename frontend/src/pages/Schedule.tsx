@@ -26,12 +26,22 @@ export function Schedule() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ day: number; slot: number } | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [selectedChildFilter, setSelectedChildFilter] = useState<string | null>(null);
 
   // 추가 폼 상태
   const [formData, setFormData] = useState({
     childId: 'c1',
     sessionName: '',
   });
+
+  // 선택된 아동의 세션만 필터링
+  const getFilteredSessions = (dayOfWeek: number, slotIndex: number) => {
+    const sessions = getSessionsByDayAndSlot(dayOfWeek, slotIndex);
+    if (selectedChildFilter) {
+      return sessions.filter(s => s.childId === selectedChildFilter);
+    }
+    return sessions;
+  };
 
   const handleAddSession = (dayOfWeek: number, timeSlotIndex: number) => {
     setSelectedSlot({ day: dayOfWeek, slot: timeSlotIndex });
@@ -90,19 +100,56 @@ export function Schedule() {
         </div>
       </div>
 
-      {/* 범례 */}
-      <div className="mb-6 flex flex-wrap gap-4">
-        {CHILDREN_LIST.map(child => (
-          <div key={child.id} className="flex items-center gap-2">
-            <div
-              className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
-              style={{ backgroundColor: child.color }}
-            >
-              {child.initials}
+      {/* 범례 및 필터 */}
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-4 mb-4">
+          {CHILDREN_LIST.map(child => (
+            <div key={child.id} className="flex items-center gap-2">
+              <div
+                className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
+                style={{ backgroundColor: child.color }}
+              >
+                {child.initials}
+              </div>
+              <span className="text-sm text-gray-600">{child.name}</span>
             </div>
-            <span className="text-sm text-gray-600">{child.name}</span>
+          ))}
+        </div>
+
+        {/* 아동별 필터 */}
+        <div className="glass rounded-2xl p-4">
+          <p className="text-sm font-semibold text-gray-700 mb-3">👤 아동별 필터</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedChildFilter(null)}
+              className={`px-4 py-2 rounded-lg transition font-semibold ${
+                selectedChildFilter === null
+                  ? 'bg-pastel-purple text-white'
+                  : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-pastel-purple'
+              }`}
+            >
+              전체 보기
+            </button>
+            {CHILDREN_LIST.map(child => (
+              <button
+                key={child.id}
+                onClick={() => setSelectedChildFilter(child.id)}
+                className={`px-4 py-2 rounded-lg transition font-semibold ${
+                  selectedChildFilter === child.id
+                    ? 'text-white'
+                    : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-opacity-100'
+                }`}
+                style={{
+                  backgroundColor: selectedChildFilter === child.id ? child.color : undefined,
+                  borderColor: selectedChildFilter !== child.id ? child.color : undefined,
+                  borderWidth: '2px',
+                }}
+              >
+                {child.name}
+              </button>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* 추가 폼 */}
@@ -174,7 +221,7 @@ export function Schedule() {
                     {slot.label}
                   </td>
                   {DAYS.map((_, dayIdx) => {
-                    const daySessions = getSessionsByDayAndSlot(dayIdx, slotIdx);
+                    const daySessions = getFilteredSessions(dayIdx, slotIdx);
                     return (
                       <td
                         key={`${dayIdx}-${slotIdx}`}

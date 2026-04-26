@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import { useCurriculum } from '../context/CurriculumContext';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ScatterChart, Scatter } from 'recharts';
 import { Download, TrendingUp, Users, Award, Target } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, WidthType, TextRun } from 'docx';
 
 const CHILDREN_DATA = [
   { id: 'c1', name: '민준', color: '#FFB6D9' },
@@ -323,8 +325,6 @@ export function Reports() {
         element.click();
         document.body.removeChild(element);
       } else if (format === 'excel') {
-        const { default: XLSX } = await import('xlsx');
-
         if (reportType === 'individual') {
           const wb = XLSX.utils.book_new();
 
@@ -386,8 +386,6 @@ export function Reports() {
           XLSX.writeFile(wb, `${filename}.xlsx`);
         }
       } else if (format === 'word') {
-        const { Document, Packer, Paragraph, Table, TableCell, TableRow, WidthType, TextRun } = await import('docx');
-
         let doc;
 
         if (reportType === 'individual') {
