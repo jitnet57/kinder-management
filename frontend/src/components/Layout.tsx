@@ -15,12 +15,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const getNavItems = (role: string | undefined) => {
     const common = [
-      { label: '대시보드', path: '/dashboard' },
       { label: '스케줄', path: '/schedule' },
+      { label: '💬 메시징', path: '/messages' },
+      { label: '🔔 알림', path: '/notifications' },
     ];
 
     if (role === 'parent') {
       return [
+        { label: '우리 아이', path: '/parent-dashboard' },
         ...common,
         { label: '아동정보', path: '/children' },
         { label: '보고서', path: '/reports' },
@@ -29,24 +31,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
     if (role === 'therapist') {
       return [
+        { label: '협업 대시보드', path: '/collaborative-dashboard' },
         ...common,
         { label: '아동정보', path: '/children' },
         { label: '데이터기록', path: '/session-log' },
+        { label: '📊 ABC 분석', path: '/abc-analysis' },
         { label: '완료목록', path: '/completion' },
         { label: '커리큘럼', path: '/curriculum' },
-        { label: '📊 보고서', path: '/reports' },
+        { label: '📈 보고서', path: '/reports' },
         { label: '📚 도움말', path: '/help' },
       ];
     }
 
     // admin: 전체 메뉴 + 승인관리
     return [
+      { label: '대시보드', path: '/dashboard' },
       ...common,
       { label: '아동정보', path: '/children' },
       { label: '데이터기록', path: '/session-log' },
+      { label: '📊 ABC 분석', path: '/abc-analysis' },
       { label: '완료목록', path: '/completion' },
       { label: '커리큘럼', path: '/curriculum' },
-      { label: '📊 보고서', path: '/reports' },
+      { label: '📈 보고서', path: '/reports' },
       { label: '📚 도움말', path: '/help' },
       { label: '👨‍💼 승인관리', path: '/admin/approvals' },
     ];

@@ -11,7 +11,9 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(cd e:\\\\\\\\kinder-management/frontend)",
-      "Bash(python3 -c \"import json; json.load\\(open\\('/e/kinder-management/akms_phase2_stream_p2_ltos.json'\\)\\)\")"
+      "Bash(python3 -c \"import json; json.load\\(open\\('/e/kinder-management/akms_phase2_stream_p2_ltos.json'\\)\\)\")",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(git commit -m 'feat: Phase 3 Complete - Collaboration Features \\(C1-C4 Streams\\) *)"
     ]
   }
 }
