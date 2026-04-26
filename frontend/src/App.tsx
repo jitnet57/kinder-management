@@ -6,6 +6,7 @@ import { MessageProvider } from './context/MessageContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ABCProvider } from './context/ABCContext';
 import { CollaborativeDashboardProvider } from './context/CollaborativeDashboardContext';
+import { AnalyticsProvider } from './context/AnalyticsContext';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Landing } from './pages/Landing';
@@ -24,6 +25,10 @@ import { Help } from './pages/Help';
 import { Messages } from './pages/Messages';
 import { Notifications } from './pages/Notifications';
 import { ABCAnalysis } from './pages/ABCAnalysis';
+import { InterventionAnalysis } from './pages/InterventionAnalysis';
+import { BehaviorPrediction } from './pages/BehaviorPrediction';
+import { LearningVelocity } from './pages/LearningVelocity';
+import { AutoInsights } from './pages/AutoInsights';
 
 function App() {
   return (
@@ -34,7 +39,8 @@ function App() {
             <NotificationProvider>
               <ABCProvider>
                 <CollaborativeDashboardProvider>
-                  <BrowserRouter>
+                  <AnalyticsProvider>
+                    <BrowserRouter>
                     <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
@@ -174,8 +180,49 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/intervention-analysis"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <InterventionAnalysis />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/behavior-prediction"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <BehaviorPrediction />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/learning-velocity"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <LearningVelocity />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/auto-insights"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AutoInsights />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
                     </BrowserRouter>
+                  </AnalyticsProvider>
                 </CollaborativeDashboardProvider>
               </ABCProvider>
             </NotificationProvider>

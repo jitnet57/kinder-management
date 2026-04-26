@@ -39,6 +39,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         { label: '완료목록', path: '/completion' },
         { label: '커리큘럼', path: '/curriculum' },
         { label: '📈 보고서', path: '/reports' },
+        // Phase 4 D3 Stream: 고급 분석 기능 메뉴
+        { label: '🔍 고급 분석', path: '#', isSection: true },
+        { label: '  ├ 중재 효과 분석', path: '/intervention-analysis' },
+        { label: '  ├ 행동 예측', path: '/behavior-prediction' },
+        { label: '  ├ 학습 속도 분석', path: '/learning-velocity' },
+        { label: '  └ AI 인사이트', path: '/auto-insights' },
         { label: '📚 도움말', path: '/help' },
       ];
     }
@@ -53,6 +59,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       { label: '완료목록', path: '/completion' },
       { label: '커리큘럼', path: '/curriculum' },
       { label: '📈 보고서', path: '/reports' },
+      // Phase 4 D3 Stream: 고급 분석 기능 메뉴
+      { label: '🔍 고급 분석', path: '#', isSection: true },
+      { label: '  ├ 중재 효과 분석', path: '/intervention-analysis' },
+      { label: '  ├ 행동 예측', path: '/behavior-prediction' },
+      { label: '  ├ 학습 속도 분석', path: '/learning-velocity' },
+      { label: '  └ AI 인사이트', path: '/auto-insights' },
       { label: '📚 도움말', path: '/help' },
       { label: '👨‍💼 승인관리', path: '/admin/approvals' },
     ];
@@ -104,19 +116,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
           } lg:block w-48 glass glass-dark border-r px-4 py-6 overflow-y-auto`}
         >
           <nav className="space-y-2">
-            {navItems.map(item => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`block px-4 py-3 rounded-lg transition ${
-                  isActive(item.path)
-                    ? 'bg-pastel-purple text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map(item => {
+              if ((item as any).isSection) {
+                return (
+                  <div key={item.path} className="text-sm font-semibold text-gray-600 px-4 py-2">
+                    {item.label}
+                  </div>
+                );
+              }
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`block px-4 py-3 rounded-lg transition text-sm ${
+                    isActive(item.path)
+                      ? 'bg-pastel-purple text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
         </aside>
 

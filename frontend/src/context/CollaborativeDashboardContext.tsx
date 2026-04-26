@@ -52,8 +52,10 @@ interface CollaborativeDashboardContextType {
 const CollaborativeDashboardContext = createContext<CollaborativeDashboardContextType | undefined>(undefined);
 
 // Mock data generator for dashboards
-const generateMockCollaborativeDashboards = (sessionTasks: SessionTask[]): CollaborativeDashboard[] => {
-  return CANONICAL_CHILDREN.map(child => {
+function generateMockCollaborativeDashboards(sessionTasks: SessionTask[]): CollaborativeDashboard[] {
+  const result: CollaborativeDashboard[] = [];
+
+  for (const child of CANONICAL_CHILDREN) {
     const today = new Date();
     const weekAgo = new Date(today);
     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -67,7 +69,21 @@ const generateMockCollaborativeDashboards = (sessionTasks: SessionTask[]): Colla
       ? tasksThisWeek.reduce((sum, t) => sum + t.score, 0) / tasksThisWeek.length
       : 0;
 
-    return {
+    const goalStatus: 'completed' | 'on_track' | 'at_risk' = avgScore >= 80 ? 'on_track' : avgScore >= 60 ? 'at_risk' : 'on_track';
+
+    const activeGoal: DashboardGoal = {
+      ltoId: 'domain_mand_lto01',
+      ltoName: '요청하기 (Mand)',
+      domainId: 'domain_mand',
+      domainName: '의도적 의사소통',
+      progress: Math.min(avgScore, 100),
+      targetDate: new Date(today.getTime() + 30 * 86400000).toISOString().split('T')[0],
+      status: goalStatus,
+      nextMilestone: '독립적으로 요청하기',
+      daysRemaining: 30,
+    };
+
+    const dashboard: CollaborativeDashboard = {
       id: `dashboard_${child.id}`,
       childId: child.id,
       viewers: {
@@ -83,19 +99,7 @@ const generateMockCollaborativeDashboards = (sessionTasks: SessionTask[]): Colla
         overallProgress: avgScore,
       },
       goals: {
-        activeGoals: [
-          {
-            ltoId: 'domain_mand_lto01',
-            ltoName: '요청하기 (Mand)',
-            domainId: 'domain_mand',
-            domainName: '의도적 의사소통',
-            progress: Math.min(avgScore, 100),
-            targetDate: new Date(today.getTime() + 30 * 86400000).toISOString().split('T')[0],
-            status: avgScore >= 80 ? 'on_track' : avgScore >= 60 ? 'at_risk' : 'on_track',
-            nextMilestone: '독립적으로 요청하기',
-            daysRemaining: 30,
-          },
-        ],
+        activeGoals: [activeGoal],
         completedGoals: [],
       },
       thisWeek: {
@@ -122,8 +126,11 @@ const generateMockCollaborativeDashboards = (sessionTasks: SessionTask[]): Colla
       },
       updatedAt: new Date().toISOString(),
     };
-  });
-};
+    result.push(dashboard);
+  }
+
+  return result;
+}
 
 export function CollaborativeDashboardProvider({
   children,
@@ -149,12 +156,14 @@ export function CollaborativeDashboardProvider({
       const notes = await storageManager.get<CollaborativeNote[]>('collaborative_notes');
       const sessions = await storageManager.get<CollaborationSession[]>('collaboration_sessions');
 
-      setCollaborativeDashboards(dashboards || generateMockCollaborativeDashboards(sessionTasks));
+      const dbsToUse = dashboards || generateMockCollaborativeDashboards(sessionTasks);
+      setCollaborativeDashboards(dbsToUse);
       setCollaborativeNotes(notes || []);
       setCollaborationSessions(sessions || []);
     } catch (error) {
       console.error('대시보드 데이터 로드 실패:', error);
-      setCollaborativeDashboards(generateMockCollaborativeDashboards(sessionTasks));
+      const defaultDbs = generateMockCollaborativeDashboards(sessionTasks);
+      setCollaborativeDashboards(defaultDbs);
     }
   };
 
@@ -171,30 +180,40 @@ export function CollaborativeDashboardProvider({
     ltoId: string,
     progress: number
   ): Promise<void> => {
-    const updated = collaborativeDashboards.map(dashboard => {
+    const updated: CollaborativeDashboard[] = collaborativeDashboards.map(dashboard => {
       if (dashboard.childId === childId) {
-        return {
+        const newGoals = dashboard.goals.activeGoals.map(goal => {
+          if (goal.ltoId === ltoId) {
+            const newStatus: 'completed' | 'on_track' | 'at_risk' =
+              progress >= 90 ? 'completed' : progress >= 70 ? 'on_track' : 'at_risk';
+            return {
+              ...goal,
+              progress: Math.min(progress, 100),
+              status: newStatus,
+            };
+          }
+          return goal;
+        });
+
+        const updated: CollaborativeDashboard = {
           ...dashboard,
           goals: {
             ...dashboard.goals,
-            activeGoals: dashboard.goals.activeGoals.map(goal =>
-              goal.ltoId === ltoId
-                ? {
-                    ...goal,
-                    progress: Math.min(progress, 100),
-                    status: progress >= 90 ? 'completed' : progress >= 70 ? 'on_track' : 'at_risk',
-                  }
-                : goal
-            ),
+            activeGoals: newGoals,
           },
           updatedAt: new Date().toISOString(),
         };
+        return updated;
       }
       return dashboard;
     });
     setCollaborativeDashboards(updated);
     await storageManager.set('collaborative_dashboards', updated);
   }, [collaborativeDashboards]);
+
+  const getCollaborativeNotes = useCallback((childId: number): CollaborativeNote[] => {
+    return collaborativeNotes.filter(n => n.childId === childId);
+  }, [collaborativeNotes]);
 
   const getParentDashboard = useCallback(async (
     childId: number,
@@ -272,10 +291,6 @@ export function CollaborativeDashboardProvider({
       topDomain: { domainId: '', domainName: '', progress: 0 },
     };
   }, [getCollaborativeDashboard]);
-
-  const getCollaborativeNotes = useCallback((childId: number): CollaborativeNote[] => {
-    return collaborativeNotes.filter(n => n.childId === childId);
-  }, [collaborativeNotes]);
 
   const createCollaborativeNote = useCallback(async (
     note: Omit<CollaborativeNote, 'id' | 'createdAt'>

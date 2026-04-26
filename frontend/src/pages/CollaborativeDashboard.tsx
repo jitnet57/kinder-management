@@ -13,7 +13,7 @@ import React, { useState, useEffect } from 'react';
 import { useCollaborativeDashboard } from '../context/CollaborativeDashboardContext';
 import { useCurriculum } from '../context/CurriculumContext';
 import { getSavedUser } from '../utils/deviceManager';
-import { CANONICAL_CHILDREN } from '../types';
+import { CANONICAL_CHILDREN, CollaborativeNote } from '../types';
 import {
   ChevronRight, MessageSquare, TrendingUp, AlertCircle,
   CheckCircle, Clock, Target, Users, Eye,
@@ -402,20 +402,21 @@ function NotesTab({ selectedChildId }: any) {
   );
 }
 
-function NoteCard({ note }: any) {
-  const typeEmoji = {
+function NoteCard({ note }: { note: CollaborativeNote }) {
+  const typeEmoji: Record<'observation' | 'insight' | 'concern' | 'celebration', string> = {
     observation: '👀',
     insight: '💡',
     concern: '⚠️',
     celebration: '🎉',
-  }[note.type];
+  };
+  const emoji = typeEmoji[note.type];
 
   return (
     <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-pastel-purple">
       <div className="flex items-start justify-between mb-2">
         <div>
           <p className="text-sm font-medium text-gray-900">
-            {typeEmoji} {note.type}
+            {emoji} {note.type}
           </p>
           <p className="text-xs text-gray-500">{note.author.name} • {new Date(note.createdAt).toLocaleDateString('ko-KR')}</p>
         </div>

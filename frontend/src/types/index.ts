@@ -375,6 +375,7 @@ export interface Feedback {
   id: string;
   conversationId: string;
   senderId: string;
+  senderName: string;
   senderRole: 'therapist' | 'parent';
   childId: number;
   type: 'progress' | 'concern' | 'suggestion' | 'celebration';
@@ -796,4 +797,170 @@ export interface CollaborativeNote {
 
   isPinned: boolean;
   createdAt: string;
+}
+
+// ============================================
+// PHASE 4 STREAM D3: 고급 분석 기능
+// ============================================
+
+// ============= 1️⃣ 중재 효과 분석 (Intervention Analysis) =============
+
+export interface InterventionEffect {
+  interventionId: string;
+  interventionName: string;
+  strategy: 'reinforcement' | 'extinction' | 'prompt' | 'prompt_fading';
+  reinforcerType?: 'tangible' | 'social' | 'activity' | 'token';
+  effectiveness: number;        // 0-100, 효과도
+  applicationsCount: number;    // 적용 횟수
+  successRate: number;          // 0-100, 성공률
+  trend: 'improving' | 'stable' | 'declining';
+  averageLatency?: number;      // 평균 응답 시간 (초)
+  confidenceScore: number;      // 0-100, 신뢰도
+}
+
+export interface InterventionAnalysisResult {
+  id: string;
+  childId: number;
+  childName: string;
+  ltoId: string;
+  ltoName: string;
+  periodStart: string;
+  periodEnd: string;
+  daysAnalyzed: number;
+
+  interventions: InterventionEffect[];
+
+  mostEffective: {
+    interventionId: string;
+    interventionName: string;
+    effectiveness: number;
+  };
+
+  leastEffective: {
+    interventionId: string;
+    interventionName: string;
+    effectiveness: number;
+  };
+
+  recommendations: string[];
+  totalTrials: number;
+  overallProgress: number;      // 0-100
+  analyzedAt: string;
+}
+
+// ============= 2️⃣ 행동 예측 (Behavior Prediction) =============
+
+export interface PredictionPoint {
+  week: number;
+  predictedAccuracy: number;    // 0-100
+  confidenceInterval: {
+    lower: number;
+    upper: number;
+  };
+  trend: 'improving' | 'stable' | 'declining';
+}
+
+export interface BehaviorPredictionResult {
+  id: string;
+  childId: number;
+  childName: string;
+  ltoId: string;
+  ltoName: string;
+
+  baselineAccuracy: number;     // 과거 5주 평균
+  historicalData: {
+    week: number;
+    accuracy: number;
+    date: string;
+  }[];
+
+  predictions: PredictionPoint[];
+
+  predictedOutcome: {
+    week: number;
+    expectedAccuracy: number;
+    likelihood: number;         // 0-100
+  };
+
+  modelAccuracy: number;        // 과거 예측 정확도
+  trend: 'improving' | 'stable' | 'declining';
+  nextMilestoneEstimate: string; // 예상 도달 날짜
+
+  createdAt: string;
+}
+
+// ============= 3️⃣ 학습 속도 분석 (Learning Velocity) =============
+
+export interface VelocityMetrics {
+  childId: number;
+  childName: string;
+  weeklyImprovement: number;    // % per week
+  accelerationRate: number;     // 가속도 (0-100)
+  consistencyScore: number;     // 0-100, 일관성
+  averageScore: number;         // 0-100
+  peakScore: number;
+  lowestScore: number;
+}
+
+export interface LearningVelocityComparison {
+  id: string;
+  period: 'week' | 'month';
+  periodLabel: string;
+  childrenMetrics: VelocityMetrics[];
+
+  fastestLearner: {
+    childId: number;
+    childName: string;
+    velocity: number;
+  };
+
+  needsSupportChild: {
+    childId: number;
+    childName: string;
+    velocity: number;
+    reason: string;
+  };
+
+  averageVelocity: number;
+  analysisDate: string;
+}
+
+// ============= 4️⃣ 자동 인사이트 (AI Insights) =============
+
+export interface InsightRecommendation {
+  id: string;
+  category: 'strength' | 'improvement_area' | 'intervention' | 'next_focus';
+  title: string;
+  description: string;
+  evidence: {
+    data_point: string;
+    value: string | number;
+    date: string;
+  }[];
+  priority: 'high' | 'normal' | 'low';
+  actionItems?: string[];
+  estimatedImpact: 'high' | 'medium' | 'low';
+}
+
+export interface AutoInsightResult {
+  id: string;
+  childId: number;
+  childName: string;
+  weekNumber: number;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+
+  insights: InsightRecommendation[];
+
+  summary: {
+    overallProgress: string;    // "좋은 진행 중입니다"
+    keyStrengths: string[];
+    areasToFocus: string[];
+    nextWeekFocus: string;
+  };
+
+  generatedAt: string;
+  modelVersion: string;
 }

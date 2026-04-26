@@ -231,8 +231,7 @@ export function ABCProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Analyze patterns
-  const analyzePatterns = useCallback(
-    (childId: number, ltoId: string, period: 'week' | 'month' | 'all' = 'month') => {
+  const analyzePatterns = (childId: number, ltoId: string, period: 'week' | 'month' | 'all' = 'month'): ABCPattern => {
       const records = getABCRecords(childId, ltoId);
 
       if (records.length === 0) {
@@ -338,18 +337,16 @@ export function ABCProvider({ children }: { children: React.ReactNode }) {
         lastUpdated: new Date().toISOString(),
       };
 
-      setABCPatterns(prev => {
-        const existing = prev.find(p => p.childId === childId && p.ltoId === ltoId);
-        if (existing) {
-          return prev.map(p => (p.childId === childId && p.ltoId === ltoId ? pattern : p));
-        }
-        return [...prev, pattern];
-      });
+    setABCPatterns(prev => {
+      const existing = prev.find(p => p.childId === childId && p.ltoId === ltoId);
+      if (existing) {
+        return prev.map(p => (p.childId === childId && p.ltoId === ltoId ? pattern : p));
+      }
+      return [...prev, pattern];
+    });
 
-      return pattern;
-    },
-    [getABCRecords]
-  );
+    return pattern;
+  };
 
   // Get all patterns
   const getAllPatterns = useCallback((childId?: number) => {
