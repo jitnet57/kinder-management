@@ -30,7 +30,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
-          <h1 className="text-2xl font-bold text-pastel-purple">🎓 AKMS</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-pastel-purple">🎓 AKMS</h1>
+            <p className="text-xs text-gray-500">ABA Child Management System</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-6">

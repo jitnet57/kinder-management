@@ -15,6 +15,8 @@ import {
   ScatterChart, Scatter, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
+import { useCurriculum } from '../context/CurriculumContext';
+import { X, Download } from 'lucide-react';
 
 interface DashboardStats {
   children: number;
@@ -34,6 +36,8 @@ interface ChartData {
 }
 
 export function Dashboard() {
+  const { completionTasks, domains } = useCurriculum();
+
   // 상태 관리
   const [stats, setStats] = useState<DashboardStats>({
     children: 12,
@@ -41,6 +45,10 @@ export function Dashboard() {
     completionRate: 85,
     activeCurriculum: 24,
   });
+
+  // 모달 상태
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedStat, setSelectedStat] = useState<string | null>(null);
 
   // 그래프 선택
   const [selectedChart, setSelectedChart] = useState('trend');
@@ -199,6 +207,85 @@ export function Dashboard() {
     };
 
     setChartData(sampleData[type] || sampleData.trend);
+  };
+
+  // 상세 데이터 조회
+  const getDetailData = (statType: string) => {
+    switch (statType) {
+      case 'children':
+        return {
+          title: '📊 등록된 아동',
+          description: '현재 등록된 아동 수',
+          data: {
+            total: stats.children,
+            description: `총 ${stats.children}명의 아동이 등록되어 있습니다.`,
+          },
+        };
+      case 'sessions':
+        return {
+          title: '📝 이번 주 세션',
+          description: '진행된 세션 수',
+          data: {
+            total: stats.sessionsThisWeek,
+            description: `이번 주에 총 ${stats.sessionsThisWeek}회의 세션이 진행되었습니다.`,
+            details: completionTasks
+              .filter(task => {
+                const taskDate = new Date(task.completedAt || '');
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return taskDate >= weekAgo;
+              })
+              .slice(0, 10)
+              .map(task => ({
+                child: task.childId,
+                date: new Date(task.completedAt || '').toLocaleDateString('ko-KR'),
+                score: task.score,
+              })),
+          },
+        };
+      case 'completion':
+        return {
+          title: '✅ 완료율',
+          description: '목표 달성률',
+          data: {
+            total: stats.completionRate,
+            unit: '%',
+            description: `목표의 ${stats.completionRate}%가 완료되었습니다.`,
+          },
+        };
+      case 'curriculum':
+        return {
+          title: '🎯 활성 커리큘럼',
+          description: '진행 중인 학습 목표',
+          data: {
+            total: stats.activeCurriculum,
+            description: `현재 ${stats.activeCurriculum}개의 학습 목표가 진행 중입니다.`,
+            domains: domains.length,
+          },
+        };
+      default:
+        return null;
+    }
+  };
+
+  // 내보내기
+  const handleExport = (statType: string) => {
+    const data = getDetailData(statType);
+    if (!data) return;
+
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      ...data,
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const element = document.createElement('a');
+    element.setAttribute('href', `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`);
+    element.setAttribute('download', `dashboard-${statType}-${new Date().toISOString().split('T')[0]}.json`);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   // 그래프 렌더링
@@ -364,10 +451,10 @@ export function Dashboard() {
       {/* 통계 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: '등록된 아동', value: stats.children, icon: '👧', color: 'from-pink-400 to-pink-500', hoverColor: 'hover:from-pink-600 hover:to-pink-700' },
-          { label: '이번 주 세션', value: stats.sessionsThisWeek, icon: '📝', color: 'from-blue-400 to-blue-500', hoverColor: 'hover:from-blue-600 hover:to-blue-700' },
-          { label: '완료율', value: `${stats.completionRate}%`, icon: '✅', color: 'from-green-400 to-green-500', hoverColor: 'hover:from-green-600 hover:to-green-700' },
-          { label: '활성 커리큘럼', value: stats.activeCurriculum, icon: '📚', color: 'from-purple-400 to-purple-500', hoverColor: 'hover:from-purple-600 hover:to-purple-700' },
+          { label: '등록된 아동', value: stats.children, icon: '👧', color: 'from-pink-400 to-pink-500', hoverColor: 'hover:from-pink-600 hover:to-pink-700', key: 'children' },
+          { label: '이번 주 세션', value: stats.sessionsThisWeek, icon: '📝', color: 'from-blue-400 to-blue-500', hoverColor: 'hover:from-blue-600 hover:to-blue-700', key: 'sessions' },
+          { label: '완료율', value: `${stats.completionRate}%`, icon: '✅', color: 'from-green-400 to-green-500', hoverColor: 'hover:from-green-600 hover:to-green-700', key: 'completion' },
+          { label: '활성 커리큘럼', value: stats.activeCurriculum, icon: '📚', color: 'from-purple-400 to-purple-500', hoverColor: 'hover:from-purple-600 hover:to-purple-700', key: 'curriculum' },
         ].map(stat => (
           <div
             key={stat.label}
@@ -381,10 +468,20 @@ export function Dashboard() {
 
             {/* 호버 메뉴 */}
             <div className="absolute inset-0 rounded-2xl bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
-              <button className="p-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition text-white font-semibold text-sm">
+              <button
+                onClick={() => {
+                  setSelectedStat(stat.key);
+                  setDetailModalOpen(true);
+                }}
+                className="p-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition text-white font-semibold text-sm"
+              >
                 상세보기
               </button>
-              <button className="p-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition text-white font-semibold text-sm">
+              <button
+                onClick={() => handleExport(stat.key)}
+                className="p-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition text-white font-semibold text-sm flex items-center gap-1"
+              >
+                <Download size={14} />
                 내보내기
               </button>
             </div>
@@ -544,6 +641,73 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* 상세 정보 모달 */}
+      {detailModalOpen && selectedStat && (() => {
+        const detailData = getDetailData(selectedStat);
+        return detailData ? (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 max-h-96 overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {detailData.title}
+                </h2>
+                <button
+                  onClick={() => setDetailModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <X size={24} className="text-gray-600" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-gray-600">{detailData.description}</p>
+
+                {selectedStat === 'sessions' && detailData.data.details && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-3">📋 이번 주 세션 목록 (최근 10개)</p>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {detailData.data.details.map((item: any, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-semibold text-gray-700">{item.child}</p>
+                            <p className="text-xs text-gray-500">{item.date}</p>
+                          </div>
+                          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold text-sm">
+                            {item.score}점
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
+                  <p className="text-sm text-gray-700">
+                    {detailData.data.description}
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-4 border-t">
+                  <button
+                    onClick={() => handleExport(selectedStat)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                  >
+                    <Download size={18} />
+                    JSON 내보내기
+                  </button>
+                  <button
+                    onClick={() => setDetailModalOpen(false)}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null;
+      })()}
     </div>
   );
 }
