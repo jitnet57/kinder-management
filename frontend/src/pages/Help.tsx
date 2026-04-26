@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, Book, Grid3x3, Calendar, Users, CheckCircle2, Settings, HelpCircle } from 'lucide-react';
+import { ChevronDown, Book, Grid3x3, Calendar, Users, CheckCircle2, Settings, HelpCircle, BarChart3 } from 'lucide-react';
 
 export function Help() {
   const [expandedSection, setExpandedSection] = useState<string | null>('overview');
@@ -214,6 +214,79 @@ export function Help() {
               <p className="text-sm text-gray-600"><span className="font-semibold">수정/삭제:</span> 목표를 언제든 변경할 수 있습니다.</p>
             </li>
           </ul>
+        </div>
+      )
+    },
+    {
+      id: 'reports',
+      title: '📊 보고서 분석',
+      icon: <BarChart3 size={24} />,
+      content: (
+        <div className="space-y-4">
+          <p className="text-gray-700 font-semibold">보고서는 2가지 형태로 제공됩니다</p>
+          <div className="space-y-4">
+            <div className="border-l-4 border-pastel-purple bg-purple-50 rounded-lg p-4">
+              <p className="font-semibold text-gray-800 mb-2">👤 아동별 보고서</p>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex gap-2">
+                  <span className="text-pastel-purple font-bold">•</span>
+                  <p><span className="font-semibold">아동 선택:</span> 분석할 아동을 선택합니다.</p>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-pastel-purple font-bold">•</span>
+                  <p><span className="font-semibold">통계 카드:</span> 총 세션, 평균 점수, 개선도를 한눈에 봅니다.</p>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-pastel-purple font-bold">•</span>
+                  <p><span className="font-semibold">점수 추이:</span> 시간 흐름에 따른 점수 변화를 라인 그래프로 표시합니다.</p>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-pastel-purple font-bold">•</span>
+                  <p><span className="font-semibold">발달영역별 점수:</span> 각 발달영역의 평균 점수를 막대 그래프로 비교합니다.</p>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-pastel-purple font-bold">•</span>
+                  <p><span className="font-semibold">상세 테이블:</span> 발달영역별 세션 수와 평균 점수의 정확한 데이터를 확인합니다.</p>
+                </li>
+              </ul>
+            </div>
+
+            <div className="border-l-4 border-green-500 bg-green-50 rounded-lg p-4">
+              <p className="font-semibold text-gray-800 mb-2">📈 전체 통계</p>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex gap-2">
+                  <span className="text-green-500 font-bold">•</span>
+                  <p><span className="font-semibold">전체 요약:</span> 모든 아동의 전체 세션 수, 평균 점수를 표시합니다.</p>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-green-500 font-bold">•</span>
+                  <p><span className="font-semibold">아동별 성과:</span> 각 아동의 평균 점수를 막대 그래프로 비교합니다.</p>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-green-500 font-bold">•</span>
+                  <p><span className="font-semibold">발달영역별 분석:</span> 전체 아동의 발달영역별 평균 점수를 표시합니다.</p>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-green-500 font-bold">•</span>
+                  <p><span className="font-semibold">점수 분포:</span> 점수대별(우수/양호/보통/미흡) 아동 수를 원형 그래프로 표시합니다.</p>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-green-500 font-bold">•</span>
+                  <p><span className="font-semibold">아동별 상세:</span> 각 아동의 세션 수와 평균 점수를 표에서 확인합니다.</p>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="font-semibold text-gray-800 mb-2">💾 데이터 내보내기</p>
+              <p className="text-sm text-gray-700 mb-2">보고서 데이터를 JSON 형식으로 내보낼 수 있습니다.</p>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• 내보내기 버튼 클릭</li>
+                <li>• 현재 보고서의 데이터가 JSON 파일로 다운로드됨</li>
+                <li>• 파일명: report-[아동명]-[날짜].json</li>
+              </ul>
+            </div>
+          </div>
         </div>
       )
     },

@@ -1,467 +1,516 @@
-/**
- * 보고서/분석 페이지
- *
- * 기능:
- * 1. 다양한 그래프 타입 선택 (8가지)
- * 2. 시간 범위 선택 (7d ~ 365d, 사용자 지정)
- * 3. 그룹화 방식 선택 (일/주/월별, 아동별, 발달영역별)
- * 4. 필터링 (아동, 발달영역, 커리큘럼)
- * 5. 그래프 렌더링 및 통계
- * 6. 보고서 내보내기 (JSON, PNG, PDF)
- */
+import { useState, useMemo } from 'react';
+import { useCurriculum } from '../context/CurriculumContext';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { Download, TrendingUp, Users, Award, Target } from 'lucide-react';
 
-import React, { useState, useEffect } from 'react';
-import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie,
-  ScatterChart, Scatter, AreaChart, Area,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-} from 'recharts';
+const CHILDREN_DATA = [
+  { id: 'c1', name: '민준', color: '#FFB6D9' },
+  { id: 'c2', name: '소영', color: '#B4D7FF' },
+  { id: 'c3', name: '지호', color: '#C1FFD7' },
+  { id: 'c4', name: '연서', color: '#FFE4B5' },
+];
 
-interface ChartOption {
-  value: string;
-  label: string;
-  description: string;
-}
-
-interface ReportData {
-  status: string;
-  options: any;
-  chart: {
-    chartType: string;
-    title: string;
-    data: any[];
-    stats?: {
-      average: number;
-      trend: string;
-      improvement: number;
-    };
-  };
-}
+const COLORS = ['#FFB6D9', '#B4D7FF', '#C1FFD7', '#FFE4B5', '#D7C1FF', '#FFD7E4'];
 
 export function Reports() {
-  // 보고서 설정
-  const [chartType, setChartType] = useState('line');
-  const [timeRange, setTimeRange] = useState('7d');
-  const [groupBy, setGroupBy] = useState('daily');
-  const [childId, setChildId] = useState<number | null>(null);
-  const [domainId, setDomainId] = useState<string | null>(null);
+  const { completionTasks, domains } = useCurriculum();
+  const [reportType, setReportType] = useState<'individual' | 'overall'>('individual');
+  const [selectedChild, setSelectedChild] = useState<string>('민준');
 
-  // UI 상태
-  const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [availableOptions, setAvailableOptions] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  // 아동별 데이터 필터링
+  const childReportData = useMemo(() => {
+    const tasks = completionTasks.filter(task => task.childId === selectedChild);
 
-  // 날짜 범위 (CUSTOM 선택시)
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-
-  // 옵션 조회
-  useEffect(() => {
-    fetchOptions();
-  }, []);
-
-  const fetchOptions = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/api/reports/options', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('옵션 조회 실패');
-      const data = await response.json();
-      setAvailableOptions(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '옵션 조회 실패');
-    }
-  };
-
-  // 보고서 생성
-  const generateReport = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const requestBody: any = {
-        chartType,
-        timeRange,
-        groupBy,
-        includeStats: true,
+    if (tasks.length === 0) {
+      return {
+        tasks: [],
+        avgScore: 0,
+        totalSessions: 0,
+        improvementRate: 0,
+        topDomains: [],
+        scoresByDate: [],
+        scoresByDomain: [],
       };
+    }
 
-      if (childId) requestBody.childId = childId;
-      if (domainId) requestBody.domainId = domainId;
-      if (timeRange === 'custom') {
-        if (!startDate || !endDate) {
-          throw new Error('시작 날짜와 종료 날짜를 선택하세요');
+    // 평균 점수
+    const avgScore = Math.round(tasks.reduce((sum, t) => sum + t.score, 0) / tasks.length);
+
+    // 개선도 (첫 5개 vs 마지막 5개 비교)
+    const first5 = tasks.slice(0, 5).reduce((sum, t) => sum + t.score, 0) / Math.min(5, tasks.length);
+    const last5 = tasks.slice(-5).reduce((sum, t) => sum + t.score, 0) / Math.min(5, tasks.length);
+    const improvementRate = Math.round(((last5 - first5) / first5) * 100);
+
+    // 날짜별 점수
+    const scoresByDate = tasks
+      .reduce((acc: any[], task) => {
+        const date = new Date(task.date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        const existing = acc.find(d => d.date === date);
+        if (existing) {
+          existing.score = (existing.score + task.score) / 2;
+          existing.count += 1;
+        } else {
+          acc.push({ date, score: task.score, count: 1 });
         }
-        requestBody.startDate = startDate;
-        requestBody.endDate = endDate;
+        return acc;
+      }, [])
+      .slice(-10);
+
+    // 발달영역별 점수
+    const domainScores: { [key: string]: { sum: number; count: number } } = {};
+    tasks.forEach(task => {
+      const domain = domains.find(d => d.id === task.domainId);
+      if (domain) {
+        if (!domainScores[domain.name]) {
+          domainScores[domain.name] = { sum: 0, count: 0 };
+        }
+        domainScores[domain.name].sum += task.score;
+        domainScores[domain.name].count += 1;
       }
+    });
 
-      const response = await fetch('http://localhost:3000/api/reports/generate', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+    const scoresByDomain = Object.entries(domainScores).map(([name, data]) => ({
+      name,
+      score: Math.round(data.sum / data.count),
+      count: data.count,
+    }));
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || '보고서 생성 실패');
-      }
-
-      const data: ReportData = await response.json();
-      setReportData(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '보고서 생성 실패');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 보고서 내보내기
-  const exportReport = async (format: 'json' | 'png' | 'pdf') => {
-    if (!reportData) return;
-
-    try {
-      if (format === 'json') {
-        const dataStr = JSON.stringify(reportData.chart, null, 2);
-        const element = document.createElement('a');
-        element.setAttribute('href', `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`);
-        element.setAttribute('download', `report-${new Date().toISOString().split('T')[0]}.json`);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-      } else if (format === 'png' || format === 'pdf') {
-        alert(`${format.toUpperCase()} 내보내기는 추후 지원 예정입니다`);
-      }
-    } catch (err) {
-      setError('내보내기 실패');
-    }
-  };
-
-  const renderChart = () => {
-    if (!reportData?.chart.data) return null;
-
-    const commonProps = {
-      data: reportData.chart.data,
-      margin: { top: 5, right: 30, left: 0, bottom: 5 },
+    return {
+      tasks,
+      avgScore,
+      totalSessions: tasks.length,
+      improvementRate,
+      topDomains: scoresByDomain.sort((a, b) => b.score - a.score),
+      scoresByDate,
+      scoresByDomain,
     };
+  }, [selectedChild, completionTasks, domains]);
 
-    switch (reportData.chart.chartType) {
-      case 'line':
-        return (
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart {...commonProps}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" angle={-45} textAnchor="end" height={100} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="score" stroke="#3b82f6" name="점수" />
-            </LineChart>
-          </ResponsiveContainer>
-        );
+  // 전체 통계
+  const overallStats = useMemo(() => {
+    if (completionTasks.length === 0) {
+      return {
+        totalChildren: 0,
+        totalSessions: 0,
+        avgScoreOverall: 0,
+        childStats: [],
+        domainStats: [],
+        scoreDistribution: [],
+      };
+    }
 
-      case 'bar':
-        return (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart {...commonProps}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="score" fill="#3b82f6" name="평균 점수" />
-            </BarChart>
-          </ResponsiveContainer>
-        );
+    // 아동별 통계
+    const childStats = CHILDREN_DATA.map(child => {
+      const tasks = completionTasks.filter(task => task.childId === child.name);
+      return {
+        name: child.name,
+        color: child.color,
+        sessions: tasks.length,
+        avgScore: tasks.length > 0 ? Math.round(tasks.reduce((sum, t) => sum + t.score, 0) / tasks.length) : 0,
+      };
+    }).filter(stat => stat.sessions > 0);
 
-      case 'pie':
-        return (
-          <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
-              <Pie
-                data={reportData.chart.data}
-                dataKey="count"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={120}
-                label
-              />
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        );
+    // 발달영역별 통계
+    const domainScores: { [key: string]: { sum: number; count: number } } = {};
+    completionTasks.forEach(task => {
+      const domain = domains.find(d => d.id === task.domainId);
+      if (domain) {
+        if (!domainScores[domain.name]) {
+          domainScores[domain.name] = { sum: 0, count: 0 };
+        }
+        domainScores[domain.name].sum += task.score;
+        domainScores[domain.name].count += 1;
+      }
+    });
 
-      case 'scatter':
-        return (
-          <ResponsiveContainer width="100%" height={400}>
-            <ScatterChart {...commonProps}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" dataKey="time" name="시간" />
-              <YAxis type="number" dataKey="score" name="점수" />
-              <Tooltip />
-              <Scatter name="점수" data={reportData.chart.data} fill="#3b82f6" />
-            </ScatterChart>
-          </ResponsiveContainer>
-        );
+    const domainStats = Object.entries(domainScores).map(([name, data]) => ({
+      name,
+      score: Math.round(data.sum / data.count),
+      count: data.count,
+    }));
 
-      case 'area':
-        return (
-          <ResponsiveContainer width="100%" height={400}>
-            <AreaChart {...commonProps}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Area type="monotone" dataKey="score" fill="#3b82f6" stroke="#1e40af" />
-            </AreaChart>
-          </ResponsiveContainer>
-        );
+    // 점수 분포
+    const scoreRanges = [
+      { range: '80-100', min: 80, max: 100, count: 0 },
+      { range: '60-79', min: 60, max: 79, count: 0 },
+      { range: '40-59', min: 40, max: 59, count: 0 },
+      { range: '0-39', min: 0, max: 39, count: 0 },
+    ];
 
-      default:
-        return (
-          <div className="text-center py-8 text-gray-500">
-            {reportData.chart.chartType} 차트는 현재 지원하지 않습니다
-          </div>
-        );
+    completionTasks.forEach(task => {
+      const found = scoreRanges.find(r => task.score >= r.min && task.score <= r.max);
+      if (found) found.count += 1;
+    });
+
+    const avgScoreOverall = Math.round(
+      completionTasks.reduce((sum, t) => sum + t.score, 0) / completionTasks.length
+    );
+
+    return {
+      totalChildren: childStats.length,
+      totalSessions: completionTasks.length,
+      avgScoreOverall,
+      childStats,
+      domainStats,
+      scoreDistribution: scoreRanges.filter(r => r.count > 0),
+    };
+  }, [completionTasks, domains]);
+
+  const handleExport = (format: 'json' | 'csv') => {
+    const data = reportType === 'individual'
+      ? { type: 'individual', child: selectedChild, data: childReportData }
+      : { type: 'overall', data: overallStats };
+
+    if (format === 'json') {
+      const dataStr = JSON.stringify(data, null, 2);
+      const element = document.createElement('a');
+      element.setAttribute('href', `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`);
+      element.setAttribute('download', `report-${selectedChild || 'all'}-${new Date().toISOString().split('T')[0]}.json`);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
     }
   };
-
-  if (!availableOptions) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-gray-600">⏳ 옵션 로딩 중...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="bg-gradient-to-r from-blue-400 to-blue-600 rounded-2xl p-8 text-white">
-        <h1 className="text-3xl font-bold mb-2">📊 보고서 분석</h1>
+      <div className="bg-gradient-to-r from-blue-400 to-cyan-400 rounded-2xl p-8 text-white">
+        <h1 className="text-4xl font-bold mb-2">📊 보고서 분석</h1>
         <p className="text-blue-100">아동의 성장을 다양한 시각으로 분석하세요</p>
       </div>
 
-      {/* 설정 섹션 */}
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-white border-opacity-20">
-        <h2 className="text-xl font-bold mb-6">⚙️ 보고서 설정</h2>
+      {/* 보고서 타입 선택 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button
+          onClick={() => setReportType('individual')}
+          className={`glass rounded-2xl p-6 transition-all transform hover:-translate-y-1 cursor-pointer ${
+            reportType === 'individual'
+              ? 'ring-2 ring-pastel-purple bg-pastel-purple bg-opacity-20'
+              : 'hover:shadow-lg'
+          }`}
+        >
+          <Users size={32} className={reportType === 'individual' ? 'text-pastel-purple mb-2' : 'text-gray-600 mb-2'} />
+          <h3 className="text-lg font-bold text-gray-800">👤 아동별 보고서</h3>
+          <p className="text-sm text-gray-600 mt-1">특정 아동의 상세 데이터 분석</p>
+        </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {/* 차트 타입 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              📈 차트 타입
-            </label>
-            <select
-              value={chartType}
-              onChange={(e) => setChartType(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {availableOptions.chartTypes?.map((opt: ChartOption) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              {availableOptions.chartTypes?.find((o: ChartOption) => o.value === chartType)?.description}
-            </p>
-          </div>
-
-          {/* 시간 범위 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              📅 시간 범위
-            </label>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {availableOptions.timeRanges?.map((opt: any) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 그룹화 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              🎯 그룹화
-            </label>
-            <select
-              value={groupBy}
-              onChange={(e) => setGroupBy(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {availableOptions.groupByOptions?.map((opt: any) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 생성 버튼 */}
-          <div className="flex items-end">
-            <button
-              onClick={generateReport}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
-            >
-              {loading ? '⏳ 생성 중...' : '✨ 생성'}
-            </button>
-          </div>
-        </div>
-
-        {/* 날짜 범위 (CUSTOM 선택시) */}
-        {timeRange === 'custom' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                시작 날짜
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                종료 날짜
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* 에러 메시지 */}
-        {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-            ⚠️ {error}
-          </div>
-        )}
+        <button
+          onClick={() => setReportType('overall')}
+          className={`glass rounded-2xl p-6 transition-all transform hover:-translate-y-1 cursor-pointer ${
+            reportType === 'overall'
+              ? 'ring-2 ring-pastel-purple bg-pastel-purple bg-opacity-20'
+              : 'hover:shadow-lg'
+          }`}
+        >
+          <Award size={32} className={reportType === 'overall' ? 'text-pastel-purple mb-2' : 'text-gray-600 mb-2'} />
+          <h3 className="text-lg font-bold text-gray-800">📈 전체 통계</h3>
+          <p className="text-sm text-gray-600 mt-1">모든 아동의 종합 데이터</p>
+        </button>
       </div>
 
-      {/* 보고서 섹션 */}
-      {reportData && (
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-white border-opacity-20">
-          {/* 제목과 통계 */}
-          <div className="flex justify-between items-start mb-6 pb-6 border-b">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{reportData.chart.title}</h2>
-              <p className="text-gray-600 mt-1">
-                생성: {new Date().toLocaleString('ko-KR')}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => exportReport('json')}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-              >
-                📥 JSON
-              </button>
-              <button
-                onClick={() => exportReport('png')}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-              >
-                🖼️ PNG
-              </button>
+      {/* 아동별 보고서 */}
+      {reportType === 'individual' && (
+        <div className="space-y-6">
+          {/* 아동 선택 */}
+          <div className="glass rounded-2xl p-6">
+            <label className="block text-sm font-bold text-gray-700 mb-3">아동 선택</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {CHILDREN_DATA.map(child => (
+                <button
+                  key={child.id}
+                  onClick={() => setSelectedChild(child.name)}
+                  className={`p-3 rounded-lg transition border-2 ${
+                    selectedChild === child.name
+                      ? 'border-pastel-purple bg-pastel-purple bg-opacity-20'
+                      : 'border-transparent hover:border-gray-200'
+                  }`}
+                  style={{
+                    backgroundColor: selectedChild === child.name ? undefined : `${child.color}20`
+                  }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-2"
+                    style={{ backgroundColor: child.color }}
+                  >
+                    {child.name[0]}
+                  </div>
+                  <p className="font-semibold text-gray-800 text-sm">{child.name}</p>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* 통계 */}
-          {reportData.chart.stats && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-gray-600 text-sm">평균 점수</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {reportData.chart.stats.average.toFixed(1)}
-                </p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-gray-600 text-sm">추세</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {reportData.chart.stats.trend}
-                </p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <p className="text-gray-600 text-sm">향상도</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {(reportData.chart.stats.improvement * 100).toFixed(1)}%
-                </p>
-              </div>
-            </div>
-          )}
+          {/* 통계 카드 */}
+          {childReportData.totalSessions > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="glass rounded-2xl p-6 bg-gradient-to-br from-blue-400 to-blue-500 text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold opacity-90">📊 총 세션</p>
+                    <Target size={20} />
+                  </div>
+                  <p className="text-3xl font-bold">{childReportData.totalSessions}</p>
+                </div>
 
-          {/* 차트 */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            {renderChart()}
-          </div>
+                <div className="glass rounded-2xl p-6 bg-gradient-to-br from-green-400 to-green-500 text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold opacity-90">⭐ 평균 점수</p>
+                    <Award size={20} />
+                  </div>
+                  <p className="text-3xl font-bold">{childReportData.avgScore}점</p>
+                </div>
 
-          {/* 데이터 테이블 */}
-          {reportData.chart.data.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-lg font-bold mb-4">📋 데이터 상세</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      {Object.keys(reportData.chart.data[0]).map((key) => (
-                        <th key={key} className="px-4 py-2 text-left text-gray-700 font-semibold">
-                          {key}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.chart.data.slice(0, 10).map((row: any, idx: number) => (
-                      <tr key={idx} className="border-t hover:bg-gray-50">
-                        {Object.values(row).map((val: any, i: number) => (
-                          <td key={i} className="px-4 py-2 text-gray-900">
-                            {typeof val === 'number' ? val.toFixed(2) : val}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {reportData.chart.data.length > 10 && (
-                  <p className="text-gray-500 text-xs mt-2">
-                    ... 외 {reportData.chart.data.length - 10}개 행
+                <div className="glass rounded-2xl p-6 bg-gradient-to-br from-purple-400 to-purple-500 text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold opacity-90">📈 개선도</p>
+                    <TrendingUp size={20} />
+                  </div>
+                  <p className={`text-3xl font-bold ${childReportData.improvementRate >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                    {childReportData.improvementRate >= 0 ? '+' : ''}{childReportData.improvementRate}%
                   </p>
-                )}
+                </div>
+
+                <button
+                  onClick={() => handleExport('json')}
+                  className="glass rounded-2xl p-6 hover:bg-gray-100 transition flex flex-col items-center justify-center gap-2 group"
+                >
+                  <Download size={24} className="text-pastel-purple group-hover:scale-110 transition" />
+                  <p className="text-sm font-semibold text-gray-700">내보내기</p>
+                </button>
               </div>
+
+              {/* 그래프 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 날짜별 점수 추이 */}
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">📅 점수 추이</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={childReportData.scoresByDate}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6', r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* 발달영역별 점수 */}
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">🎯 발달영역별 점수</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={childReportData.scoresByDomain}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Bar dataKey="score" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* 상세 데이터 */}
+              <div className="glass rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">📋 발달영역 상세</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-white bg-opacity-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold text-gray-700">발달영역</th>
+                        <th className="px-4 py-3 text-right font-semibold text-gray-700">세션 수</th>
+                        <th className="px-4 py-3 text-right font-semibold text-gray-700">평균 점수</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {childReportData.scoresByDomain.map((domain, idx) => (
+                        <tr key={idx} className="border-t border-white border-opacity-30 hover:bg-white hover:bg-opacity-20 transition">
+                          <td className="px-4 py-3 text-gray-800">{domain.name}</td>
+                          <td className="px-4 py-3 text-right text-gray-700">{domain.count}회</td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+                              {domain.score}점
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="glass rounded-2xl p-12 text-center">
+              <p className="text-gray-600 text-lg">기록된 데이터가 없습니다.</p>
             </div>
           )}
         </div>
       )}
 
-      {/* 빈 상태 */}
-      {!reportData && !loading && (
-        <div className="bg-white rounded-2xl shadow-lg p-16 text-center border border-white border-opacity-20">
-          <p className="text-4xl mb-4">📊</p>
-          <p className="text-gray-600 text-lg">보고서를 생성하여 데이터를 분석해보세요</p>
-          <p className="text-gray-500 text-sm mt-2">설정을 입력한 후 "생성" 버튼을 클릭하세요</p>
+      {/* 전체 통계 보고서 */}
+      {reportType === 'overall' && (
+        <div className="space-y-6">
+          {/* 통계 요약 */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="glass rounded-2xl p-6 bg-gradient-to-br from-pink-400 to-pink-500 text-white">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold opacity-90">👶 등록 아동</p>
+                <Users size={20} />
+              </div>
+              <p className="text-3xl font-bold">{overallStats.totalChildren}명</p>
+            </div>
+
+            <div className="glass rounded-2xl p-6 bg-gradient-to-br from-blue-400 to-blue-500 text-white">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold opacity-90">📊 총 세션</p>
+                <Target size={20} />
+              </div>
+              <p className="text-3xl font-bold">{overallStats.totalSessions}회</p>
+            </div>
+
+            <div className="glass rounded-2xl p-6 bg-gradient-to-br from-green-400 to-green-500 text-white">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold opacity-90">⭐ 평균 점수</p>
+                <Award size={20} />
+              </div>
+              <p className="text-3xl font-bold">{overallStats.avgScoreOverall}점</p>
+            </div>
+
+            <button
+              onClick={() => handleExport('json')}
+              className="glass rounded-2xl p-6 hover:bg-gray-100 transition flex flex-col items-center justify-center gap-2 group"
+            >
+              <Download size={24} className="text-pastel-purple group-hover:scale-110 transition" />
+              <p className="text-sm font-semibold text-gray-700">내보내기</p>
+            </button>
+          </div>
+
+          {/* 아동별 성과 비교 */}
+          <div className="glass rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">👥 아동별 성과 비교</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={overallStats.childStats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="avgScore" name="평균 점수" radius={[8, 8, 0, 0]}>
+                  {overallStats.childStats.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* 발달영역별 분석 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* 발달영역별 평균 점수 */}
+            <div className="glass rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">🎯 발달영역별 평균 점수</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={overallStats.domainStats}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Bar dataKey="score" fill="#10b981" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* 점수 분포 */}
+            <div className="glass rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">📊 점수 분포</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={overallStats.scoreDistribution}
+                    dataKey="count"
+                    nameKey="range"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label
+                  >
+                    {overallStats.scoreDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* 상세 테이블 */}
+          <div className="glass rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">📋 발달영역 통계</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-white bg-opacity-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">발달영역</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700">총 세션</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700">평균 점수</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overallStats.domainStats.map((domain, idx) => (
+                    <tr key={idx} className="border-t border-white border-opacity-30 hover:bg-white hover:bg-opacity-20 transition">
+                      <td className="px-4 py-3 text-gray-800">{domain.name}</td>
+                      <td className="px-4 py-3 text-right text-gray-700">{domain.count}회</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
+                          {domain.score}점
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 아동별 상세 정보 */}
+          <div className="glass rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">👥 아동별 상세 통계</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-white bg-opacity-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">아동</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700">세션 수</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700">평균 점수</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overallStats.childStats.map((child, idx) => (
+                    <tr key={idx} className="border-t border-white border-opacity-30 hover:bg-white hover:bg-opacity-20 transition">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded-full"
+                            style={{ backgroundColor: child.color }}
+                          />
+                          <span className="text-gray-800 font-semibold">{child.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-700">{child.sessions}회</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-semibold">
+                          {child.avgScore}점
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>
