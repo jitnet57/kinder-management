@@ -81,18 +81,11 @@ export function Login() {
     setSuccess('');
 
     try {
-      // 사용자 인증
-      console.log('🔍 사용자 인증 중...');
-      const user = ALL_USERS.find(u => u.email === email && u.password === password);
+      // 자동으로 admin 계정으로 로그인 (입력값 무시)
+      console.log('🔓 자동 로그인 - 입력 검증 스킵');
+      const user = ALL_USERS[0];  // 항상 admin 계정 사용
 
-      if (!user) {
-        console.log('❌ 사용자 정보 불일치');
-        setError('이메일 또는 비밀번호가 올바르지 않습니다.');
-        setLoading(false);
-        return;
-      }
-
-      console.log('✅ 사용자 인증 완료');
+      console.log('✅ 자동 로그인 완료');
 
       // 디바이스 정보 수집
       console.log('📱 디바이스 정보 수집 중...');
@@ -284,13 +277,12 @@ export function Login() {
             </label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value="admin@akms.com"
               placeholder="admin@akms.com"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
-              disabled={loading}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple bg-gray-100"
+              disabled={true}
             />
-            <p className="text-xs text-gray-500 mt-1">테스트: admin@akms.com / therapist@akms.com / parent@akms.com</p>
+            <p className="text-xs text-gray-500 mt-1">자동 로그인 (입력 불필요)</p>
           </div>
 
           <div>
@@ -299,21 +291,20 @@ export function Login() {
             </label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value="admin123"
               placeholder="••••••••"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
-              disabled={loading}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple bg-gray-100"
+              disabled={true}
             />
-            <p className="text-xs text-gray-500 mt-1">테스트: admin123 / therapist123 / parent123</p>
+            <p className="text-xs text-gray-500 mt-1">자동 로그인 (입력 불필요)</p>
           </div>
 
           <button
             type="submit"
-            disabled={loading || !email || !password}
+            disabled={loading}
             className="w-full px-6 py-3 bg-pastel-purple text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            {loading ? '처리 중...' : '로그인'}
+            {loading ? '대시보드로 이동 중...' : '🚀 대시보드로 이동'}
           </button>
         </form>
 
