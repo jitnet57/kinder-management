@@ -110,10 +110,73 @@ const INITIAL_CURRICULUM: DevelopmentDomain[] = [
   },
 ];
 
+// 샘플 세션 과제 생성
+const generateMockSessionTasks = (): SessionTask[] => {
+  const children = ['민준', '소영', '지호', '연서'];
+  const tasks: SessionTask[] = [];
+  const today = new Date();
+
+  children.forEach((childId, childIdx) => {
+    for (let i = 0; i < 10; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+
+      tasks.push({
+        id: `task-${childIdx}-${i}`,
+        childId,
+        domainId: i % 2 === 0 ? 'd1' : 'd2',
+        ltoId: i % 2 === 0 ? 'l1' : 'l3',
+        stoId: i % 3 === 0 ? 's1' : (i % 3 === 1 ? 's2' : 's3'),
+        date: dateStr,
+        startTime: `${9 + (i % 3)}:00`,
+        endTime: `${10 + (i % 3)}:00`,
+        score: 70 + Math.random() * 30,
+        notes: `세션 관찰 노트 ${i + 1}. 긍정적인 진행을 보임.`,
+        completed: false,
+      });
+    }
+  });
+
+  return tasks;
+};
+
+// 샘플 완료 과제 생성
+const generateMockCompletionTasks = (): SessionTask[] => {
+  const children = ['민준', '소영', '지호', '연서'];
+  const tasks: SessionTask[] = [];
+  const today = new Date();
+
+  children.forEach((childId, childIdx) => {
+    for (let i = 0; i < 10; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - (15 + i));
+      const dateStr = date.toISOString().split('T')[0];
+
+      tasks.push({
+        id: `completion-${childIdx}-${i}`,
+        childId,
+        domainId: i % 2 === 0 ? 'd1' : 'd2',
+        ltoId: i % 2 === 0 ? 'l2' : 'l4',
+        stoId: i % 3 === 0 ? 's4' : (i % 3 === 1 ? 's5' : 's6'),
+        date: dateStr,
+        startTime: `${9 + (i % 3)}:00`,
+        endTime: `${10 + (i % 3)}:00`,
+        score: 75 + Math.random() * 25,
+        notes: `완료 기록 ${i + 1}. 목표 달성 완료.`,
+        completed: true,
+        completedAt: date.toISOString(),
+      });
+    }
+  });
+
+  return tasks;
+};
+
 export function CurriculumProvider({ children }: { children: React.ReactNode }) {
   const [domains, setDomains] = useState<DevelopmentDomain[]>(INITIAL_CURRICULUM);
-  const [sessionTasks, setSessionTasks] = useState<SessionTask[]>([]);
-  const [completionTasks, setCompletionTasks] = useState<SessionTask[]>([]);
+  const [sessionTasks, setSessionTasks] = useState<SessionTask[]>(generateMockSessionTasks());
+  const [completionTasks, setCompletionTasks] = useState<SessionTask[]>(generateMockCompletionTasks());
 
   // Domain operations
   const addDomain = useCallback((name: string) => {
