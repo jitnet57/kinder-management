@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(netstat -ano)",
-      "Bash(python3)"
+      "Bash(python3)",
+      "Bash(git commit -m 'feat: Phase 4 D3 Stream - 4가지 고급 분석 기능 완성 *)",
+      "Bash(git commit *)"
     ]
   }
 }

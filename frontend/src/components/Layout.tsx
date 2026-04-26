@@ -45,6 +45,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         { label: '  ├ 행동 예측', path: '/behavior-prediction' },
         { label: '  ├ 학습 속도 분석', path: '/learning-velocity' },
         { label: '  └ AI 인사이트', path: '/auto-insights' },
+        // Phase 5 P2 Stream: 5가지 고급 기능
+        { label: '⚡ Phase 5 기능', path: '#', isSection: true },
+        { label: '  ├ 실시간 AI 코칭', path: '/live-session' },
+        { label: '  ├ 비디오 분석', path: '/video-analyzer' },
+        { label: '  ├ 스마트 알림', path: '/smart-notification-settings' },
+        { label: '  ├ 통계 분석', path: '/statistical-analysis' },
+        { label: '  └ 언어 설정', path: '/language-settings' },
         { label: '📚 도움말', path: '/help' },
       ];
     }
@@ -65,6 +72,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       { label: '  ├ 행동 예측', path: '/behavior-prediction' },
       { label: '  ├ 학습 속도 분석', path: '/learning-velocity' },
       { label: '  └ AI 인사이트', path: '/auto-insights' },
+      // Phase 5 P2 Stream: 5가지 고급 기능
+      { label: '⚡ Phase 5 기능', path: '#', isSection: true },
+      { label: '  ├ 실시간 AI 코칭', path: '/live-session' },
+      { label: '  ├ 비디오 분석', path: '/video-analyzer' },
+      { label: '  ├ 스마트 알림', path: '/smart-notification-settings' },
+      { label: '  ├ 통계 분석', path: '/statistical-analysis' },
+      { label: '  └ 언어 설정', path: '/language-settings' },
       { label: '📚 도움말', path: '/help' },
       { label: '👨‍💼 승인관리', path: '/admin/approvals' },
     ];
