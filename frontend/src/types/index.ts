@@ -7,6 +7,7 @@
 export interface Child {
   id: number;        // 1, 2, 3, 4 - 절대 string name 아님
   name: string;      // '민준', '소영', '지호', '연서'
+  age: number;       // 아동 나이
   birthDate: string;
   phone: string;
   address: string;
@@ -81,6 +82,7 @@ export const CANONICAL_CHILDREN: Child[] = [
   {
     id: 1,
     name: '민준',
+    age: 3,
     birthDate: '2021-01-15',
     phone: '010-1234-5678',
     address: '서울시 강남구 테헤란로 123, 푸른숲아파트 101동',
@@ -91,6 +93,7 @@ export const CANONICAL_CHILDREN: Child[] = [
   {
     id: 2,
     name: '소영',
+    age: 3,
     birthDate: '2021-06-10',
     phone: '010-2345-6789',
     address: '서울시 서초구 강남대로 45, 현대빌라 3층',
@@ -101,6 +104,7 @@ export const CANONICAL_CHILDREN: Child[] = [
   {
     id: 3,
     name: '지호',
+    age: 4,
     birthDate: '2020-03-22',
     phone: '010-3456-7890',
     address: '서울시 강동구 구천면로 789, 삼성아파트 205동',
@@ -111,6 +115,7 @@ export const CANONICAL_CHILDREN: Child[] = [
   {
     id: 4,
     name: '연서',
+    age: 3,
     birthDate: '2021-09-05',
     phone: '010-4567-8901',
     address: '경기도 성남시 분당구 정자동 456번지',

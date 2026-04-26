@@ -3,9 +3,6 @@ import curriculumData from '../data/curriculum.json';
 import { SessionTask, DevelopmentDomain as DevelopmentDomainType, ChildId } from '../types';
 import { storageManager } from '../utils/storage';
 
-// Re-export for backward compatibility
-export { STO, LTO } from '../data/curriculum.json';
-
 export interface STO {
   id: string;
   name: string;

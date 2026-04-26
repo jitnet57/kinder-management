@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Edit2, Trash2, Save, X, BarChart3 } from 'lucide-react';
-import { useCurriculum, SessionTask } from '../context/CurriculumContext';
+import { useCurriculum } from '../context/CurriculumContext';
 import { TaskGraphModal } from './TaskGraphModal';
-import { Child } from '../types';
+import { Child, SessionTask } from '../types';
 
 interface ChildDetailViewProps {
   child: Child;

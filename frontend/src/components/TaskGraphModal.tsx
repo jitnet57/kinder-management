@@ -6,7 +6,7 @@ interface TaskGraphModalProps {
   isOpen: boolean;
   onClose: () => void;
   taskId: string;
-  childId: string;
+  childId: number;
 }
 
 export function TaskGraphModal({ isOpen, onClose, taskId, childId }: TaskGraphModalProps) {

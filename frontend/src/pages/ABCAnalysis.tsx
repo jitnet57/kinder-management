@@ -78,7 +78,13 @@ export function ABCAnalysis() {
         {activeTab === 'record' && (
           <div className="bg-white rounded-lg p-6 shadow">
             <h2 className="text-xl font-bold text-gray-800 mb-4">새 ABC 기록</h2>
-            <ABCRecorder childId={selectedChildId} />
+            <ABCRecorder
+              childId={selectedChildId}
+              sessionTaskId="new-session"
+              ltoId="domain_mand_lto01"
+              stoId="domain_mand_lto01_sto1"
+              onClose={() => {}}
+            />
           </div>
         )}
 
@@ -88,7 +94,7 @@ export function ABCAnalysis() {
               {selectedChild?.name} - 행동 분석
             </h2>
             {childRecords.length > 0 ? (
-              <ABCAnalytics childId={selectedChildId} records={childRecords} />
+              <ABCAnalytics childId={selectedChildId} />
             ) : (
               <div className="text-center py-12 text-gray-500">
                 <p>분석할 데이터가 없습니다.</p>
@@ -102,7 +108,7 @@ export function ABCAnalysis() {
           <div className="bg-white rounded-lg p-6 shadow">
             <h2 className="text-xl font-bold text-gray-800 mb-4">기록 목록</h2>
             {childRecords.length > 0 ? (
-              <ABCDataList records={childRecords} />
+              <ABCDataList childId={selectedChildId} />
             ) : (
               <div className="text-center py-12 text-gray-500">
                 <p>기록된 데이터가 없습니다.</p>

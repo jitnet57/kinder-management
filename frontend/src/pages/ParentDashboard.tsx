@@ -11,8 +11,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useCollaborativeDashboard } from '../context/CollaborativeDashboardContext';
-import { getSavedUser, CANONICAL_CHILDREN } from '../utils/deviceManager';
-import { CANONICAL_CHILDREN as ALL_CHILDREN } from '../types';
+import { getSavedUser } from '../utils/deviceManager';
+import { CANONICAL_CHILDREN } from '../types';
 import {
   CheckCircle, Star, MessageCircle, TrendingUp, Calendar,
   Home, Award, Heart, Zap,
@@ -23,7 +23,7 @@ export function ParentDashboard() {
   const { getParentDashboard } = useCollaborativeDashboard();
 
   // In production, determine the childId from parent relationship
-  const childId = ALL_CHILDREN[0]?.id || 1;
+  const childId = CANONICAL_CHILDREN[0]?.id || 1;
   const [dashboard, setDashboard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

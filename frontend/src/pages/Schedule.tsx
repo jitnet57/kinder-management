@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Trash2, Edit } from 'lucide-react';
 import { useSchedule } from '../context/ScheduleContext';
+import { CANONICAL_CHILDREN } from '../types';
 // import { exportScheduleToExcel, exportScheduleToWord } from '../utils/exportUtils';
 
 const DAYS = ['월', '화', '수', '목', '금', '토'];
@@ -11,14 +12,8 @@ const TIME_SLOTS = [
   { label: '오후 4-6', start: 16, end: 18 },
 ];
 
-const CHILDREN_LIST = [
-  { id: 'c1', name: '민준', color: '#FFB6D9', initials: 'M' },
-  { id: 'c2', name: '소영', color: '#B4D7FF', initials: 'S' },
-  { id: 'c3', name: '지호', color: '#C1FFD7', initials: 'J' },
-  { id: 'c4', name: '연서', color: '#FFE4B5', initials: 'Y' },
-];
-
-const getChildById = (id: string) => CHILDREN_LIST.find(c => c.id === id);
+const getChildById = (id: number) => CANONICAL_CHILDREN.find(c => c.id === id);
+const getInitials = (name: string) => name.substring(0, 1).toUpperCase();
 
 export function Schedule() {
   const { sessions, addSession, updateSession, deleteSession, getSessionsByDayAndSlot } = useSchedule();
@@ -26,11 +21,11 @@ export function Schedule() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ day: number; slot: number } | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
-  const [selectedChildFilter, setSelectedChildFilter] = useState<string | null>(null);
+  const [selectedChildFilter, setSelectedChildFilter] = useState<number | null>(null);
 
   // 추가 폼 상태
   const [formData, setFormData] = useState({
-    childId: 'c1',
+    childId: 1 as number,
     sessionName: '',
   });
 
@@ -45,7 +40,7 @@ export function Schedule() {
 
   const handleAddSession = (dayOfWeek: number, timeSlotIndex: number) => {
     setSelectedSlot({ day: dayOfWeek, slot: timeSlotIndex });
-    setFormData({ childId: 'c1', sessionName: '' });
+    setFormData({ childId: 1, sessionName: '' });
     setShowAddForm(true);
   };
 
@@ -70,7 +65,7 @@ export function Schedule() {
 
     setShowAddForm(false);
     setSelectedSlot(null);
-    setFormData({ childId: 'c1', sessionName: '' });
+    setFormData({ childId: 1, sessionName: '' });
   };
 
   const mockSchedules = sessions.map(session => ({
@@ -103,13 +98,13 @@ export function Schedule() {
       {/* 범례 및 필터 */}
       <div className="mb-6">
         <div className="flex flex-wrap gap-4 mb-4">
-          {CHILDREN_LIST.map(child => (
+          {CANONICAL_CHILDREN.map(child => (
             <div key={child.id} className="flex items-center gap-2">
               <div
                 className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
                 style={{ backgroundColor: child.color }}
               >
-                {child.initials}
+                {getInitials(child.name)}
               </div>
               <span className="text-sm text-gray-600">{child.name}</span>
             </div>
@@ -130,7 +125,7 @@ export function Schedule() {
             >
               전체 보기
             </button>
-            {CHILDREN_LIST.map(child => (
+            {CANONICAL_CHILDREN.map(child => (
               <button
                 key={child.id}
                 onClick={() => setSelectedChildFilter(child.id)}
@@ -163,10 +158,10 @@ export function Schedule() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">아동 선택</label>
               <select
                 value={formData.childId}
-                onChange={(e) => setFormData({ ...formData, childId: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, childId: Number(e.target.value) })}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
               >
-                {CHILDREN_LIST.map(child => (
+                {CANONICAL_CHILDREN.map(child => (
                   <option key={child.id} value={child.id}>{child.name}</option>
                 ))}
               </select>
@@ -269,7 +264,7 @@ export function Schedule() {
                                 ) : (
                                   <div className="flex flex-col justify-between h-full relative z-10">
                                     <div>
-                                      <div className="text-xs font-bold drop-shadow-sm">[{child?.initials}]</div>
+                                      <div className="text-xs font-bold drop-shadow-sm">[{child?.name ? getInitials(child.name) : '?'}]</div>
                                       <div className="text-xs font-semibold drop-shadow-sm">{session.sessionName}</div>
                                       <div className="text-xs opacity-90 drop-shadow-sm">{session.startTime}시-{session.endTime}시</div>
                                     </div>

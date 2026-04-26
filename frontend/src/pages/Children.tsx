@@ -107,8 +107,16 @@ export function Children() {
       alert('아동 이름을 입력해주세요.');
       return;
     }
+    // Calculate age from birthDate
+    const birthDate = new Date(newChildForm.birthDate);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear() -
+      (today.getMonth() < birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
+
     const newChild: Child = {
       id: Math.max(...children.map(c => c.id), 0) + 1,
+      age: Math.max(0, age),
       ...newChildForm,
       photo: null,
     };
