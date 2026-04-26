@@ -9,7 +9,9 @@
       "Bash(node -e ' *)",
       "Bash(cd e:\\\\\\\\kinder-management)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(cd e:\\\\\\\\kinder-management/frontend)",
+      "Bash(python3 -c \"import json; json.load\\(open\\('/e/kinder-management/akms_phase2_stream_p2_ltos.json'\\)\\)\")"
     ]
   }
 }

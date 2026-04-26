@@ -1,7 +1,7 @@
 {
-  "version": "2.0",
-  "lastUpdated": "2026-04-26",
-  "totalDomains": 23,
+  "version": "1.0",
+  "lastUpdated": "2024-04-26",
+  "totalDomains": 14,
   "domains": [
     {
       "id": "domain_mand",
@@ -9956,119 +9956,7 @@
           }
         }
       ]
-    },
-    {
-      "id": "domain_listener",
-      "name": "수신언어(Listener)",
-      "description": "다른 사람의 언어를 이해하고 지시를 따르는 능력",
-      "color": "#06A77D",
-      "ltoCount": 18,
-      "ltos": [
-        {
-          "id": "domain_listener_lto01",
-          "order": 1,
-          "name": "신체 부위 지시 따르기",
-          "goal": "구두 지시에 따라 자신의 신체 부위를 올바르게 지적하거나 움직이기",
-          "stoCount": 4,
-          "stos": [
-            {
-              "order": 1,
-              "name": "신체 부위 지시 따르기 - 보조 있이 시도",
-              "description": "성인이 신체 부위를 지적하며 '코' 등 명시하고 신체 보조로 따라하도록 격려"
-            },
-            {
-              "order": 2,
-              "name": "신체 부위 지시 따르기 - 부분적 독립",
-              "description": "지시 시 약간의 신체 보조로 신체 부위 지적"
-            },
-            {
-              "order": 3,
-              "name": "신체 부위 지시 따르기 - 독립적 수행",
-              "description": "구두 지시만으로 신체 부위를 정확히 지적"
-            },
-            {
-              "order": 4,
-              "name": "신체 부위 지시 따르기 - 일반화",
-              "description": "다양한 신체 부위 지시를 여러 상황에서 정확히 따르기"
-            }
-          ],
-          "teachingTips": {
-            "prompt_hierarchy": "1. 명확한 신체 부위(눈, 코, 입) + 신체 보조 → 2. 중간 난이도(귀, 팔) → 3. 어려운 부위(발가락, 팔꿈치) → 4. 속도 증가 → 5. 복합 지시(코를 손으로 만져)",
-            "reinforcement": "정확한 신체 부위 지적에 즉시 칭찬",
-            "error_correction": "오류 시 성인이 올바른 부위를 시연하고 함께 다시 시도",
-            "generalization": "거울 앞에서, 그림에서, 다른 사람의 신체 부위도 지적하기",
-            "data_collection": "정확하게 지적한 부위의 개수, 반응 속도, 보조 감소 추이 기록",
-            "prerequisite": "기본적 청각 주의, 신체 인식",
-            "motivation": "자신의 신체를 이해하고 조절하는 능력",
-            "family_involvement": "부모가 목욕, 옷 입을 때 신체 부위를 자연스럽게 지칭하며 학습 기회 제공"
-          }
-        }
-      ]
-    },
-    {
-      "id": "domain_visual",
-      "name": "시각지각(Visual Perception)",
-      "description": "색상, 형태, 패턴, 위치 등 시각 정보를 인식하고 처리하는 기술",
-      "color": "#FF9F1C",
-      "ltoCount": 15,
-      "ltos": []
-    },
-    {
-      "id": "domain_writing",
-      "name": "쓰기(Writing)",
-      "description": "글자, 숫자, 그림 등을 손으로 표현하고 작성하는 기술",
-      "color": "#00A4EF",
-      "ltoCount": 15,
-      "ltos": []
-    },
-    {
-      "id": "domain_math",
-      "name": "수학(Mathematics)",
-      "description": "수량, 숫자, 기하학적 개념을 이해하고 적용하는 기술",
-      "color": "#06D6A0",
-      "ltoCount": 15,
-      "ltos": []
-    },
-    {
-      "id": "domain_reading",
-      "name": "읽기(Reading)",
-      "description": "글자와 문장을 읽고 의미를 이해하는 기술",
-      "color": "#EF476F",
-      "ltoCount": 15,
-      "ltos": []
-    },
-    {
-      "id": "domain_selfcare",
-      "name": "자기관리(Self-Care)",
-      "description": "먹기, 씻기, 옷 입기 등 일상생활 기술을 독립적으로 수행하기",
-      "color": "#FFB4A2",
-      "ltoCount": 15,
-      "ltos": []
-    },
-    {
-      "id": "domain_safety",
-      "name": "안전(Safety)",
-      "description": "위험 상황을 인식하고 안전하게 행동하는 기술",
-      "color": "#E76F51",
-      "ltoCount": 15,
-      "ltos": []
-    },
-    {
-      "id": "domain_finemotor",
-      "name": "세밀한 운동(Fine Motor)",
-      "description": "손가락, 손을 정밀하게 움직여 미세한 동작을 수행하는 기술",
-      "color": "#A23B72",
-      "ltoCount": 30,
-      "ltos": []
-    },
-    {
-      "id": "domain_grossmotor",
-      "name": "큰 근육 운동(Gross Motor)",
-      "description": "팔, 다리, 몸통을 사용하여 큰 동작을 수행하는 기술",
-      "color": "#118AB2",
-      "ltoCount": 30,
-      "ltos": []
     }
   ],
-  "totalLTOs": 420
+  "totalLTOs": 252
 }
