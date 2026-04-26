@@ -95,6 +95,20 @@ class StorageManager {
     }
   }
 
+  // 동기 조회 (localStorage만 사용)
+  getSync<T = any>(key: string): T | null {
+    try {
+      const item = localStorage.getItem(`kinder_${key}`);
+      if (item) {
+        const parsed: StorageItem = JSON.parse(item);
+        return parsed.value as T;
+      }
+    } catch (error) {
+      console.error('localStorage 동기 조회 실패:', error);
+    }
+    return null;
+  }
+
   // 단일 항목 조회
   async get<T = any>(key: string): Promise<T | null> {
     // 먼저 localStorage에서 조회
@@ -292,7 +306,8 @@ class SyncQueue {
       }
       return false;
     } catch (error) {
-      console.error('동기화 실패:', error);
+      // 서버 동기화 실패는 경고만 출력 (에러 던지지 않음)
+      console.warn('⚠️ 서버 동기화 실패 (오프라인 모드로 계속 진행):', error);
       return false;
     }
   }

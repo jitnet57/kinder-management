@@ -4,6 +4,7 @@ import { CurriculumProvider } from './context/CurriculumContext';
 import { ScheduleProvider } from './context/ScheduleContext';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { AdminApprovals } from './pages/AdminApprovals';
 import { Dashboard } from './pages/Dashboard';
@@ -17,24 +18,21 @@ import { Help } from './pages/Help';
 
 function App() {
   return (
-    <CurriculumProvider>
-      <ScheduleProvider>
-        <CacheProvider>
+    <CacheProvider>
+      <CurriculumProvider>
+        <ScheduleProvider>
           <BrowserRouter>
             <Routes>
+              <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
 
               <Route
                 path="/admin/approvals"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminApprovals />
-                  </ProtectedRoute>
-                }
+                element={<AdminApprovals />}
               />
 
               <Route
-                path="/"
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <Layout>
@@ -115,9 +113,9 @@ function App() {
               />
             </Routes>
           </BrowserRouter>
-        </CacheProvider>
-      </ScheduleProvider>
-    </CurriculumProvider>
+        </ScheduleProvider>
+      </CurriculumProvider>
+    </CacheProvider>
   );
 }
 

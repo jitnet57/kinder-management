@@ -3,6 +3,8 @@
  * 디바이스 인증 및 사용자 승인 시스템
  */
 
+import { Notification } from '../types/index';
+
 export interface Device {
   id: string;
   name: string;
@@ -364,4 +366,30 @@ export async function verifyAccess(userId: string, deviceId: string): Promise<bo
   });
 
   return true;
+}
+
+/**
+ * 알림 추가
+ */
+export function addNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'read'>): void {
+  const notifications = getNotifications();
+  notifications.push({
+    ...notification,
+    id: `notif-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    read: false,
+  });
+  // 최근 100개만 유지
+  localStorage.setItem('akms_notifications', JSON.stringify(notifications.slice(-100)));
+}
+
+/**
+ * 알림 조회
+ */
+export function getNotifications(): Notification[] {
+  try {
+    return JSON.parse(localStorage.getItem('akms_notifications') || '[]');
+  } catch {
+    return [];
+  }
 }

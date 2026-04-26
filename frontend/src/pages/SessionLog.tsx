@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { BarChart3, Edit, Trash2, Save, Plus, CheckCircle2, Eye, X } from 'lucide-react';
+import { BarChart3, Edit, Trash2, Save, Plus, CheckCircle2, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCurriculum } from '../context/CurriculumContext';
 import { TaskGraphModal } from '../components/TaskGraphModal';
-
-const CHILDREN = ['민준', '소영', '지호', '연서'];
+import { CANONICAL_CHILDREN } from '../types';
 
 export function SessionLog() {
   const { domains, sessionTasks, addSessionTask, updateSessionTask, deleteSessionTask, completeSessionTask, getTasksByChild } = useCurriculum();
-  const [selectedChild, setSelectedChild] = useState(CHILDREN[0]);
+  const [selectedChild, setSelectedChild] = useState(1);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string>('');
@@ -57,22 +56,46 @@ export function SessionLog() {
           <label className="block text-sm font-semibold text-gray-700 mb-2">아동 선택</label>
           <select
             value={selectedChild}
-            onChange={(e) => setSelectedChild(e.target.value)}
+            onChange={(e) => setSelectedChild(parseInt(e.target.value))}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
           >
-            {CHILDREN.map(name => (
-              <option key={name} value={name}>{name}</option>
+            {CANONICAL_CHILDREN.map(child => (
+              <option key={child.id} value={child.id}>{child.name}</option>
             ))}
           </select>
         </div>
         <div className="flex-1">
           <label className="block text-sm font-semibold text-gray-700 mb-2">날짜 선택</label>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
-          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                const date = new Date(selectedDate);
+                date.setDate(date.getDate() - 1);
+                setSelectedDate(date.toISOString().split('T')[0]);
+              }}
+              className="p-3 border border-gray-200 rounded-lg hover:bg-gray-100 transition"
+              title="이전날"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
+            />
+            <button
+              onClick={() => {
+                const date = new Date(selectedDate);
+                date.setDate(date.getDate() + 1);
+                setSelectedDate(date.toISOString().split('T')[0]);
+              }}
+              className="p-3 border border-gray-200 rounded-lg hover:bg-gray-100 transition"
+              title="다음날"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
       </div>
 

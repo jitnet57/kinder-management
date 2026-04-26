@@ -2,18 +2,17 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Trash2, Edit, Save, X, CheckCircle2 } from 'lucide-react';
 // import { exportCompletionToExcel } from '../utils/exportUtils';
 import { useCurriculum } from '../context/CurriculumContext';
-
-const CHILDREN = ['민준', '소영', '지호', '연서'];
+import { CANONICAL_CHILDREN } from '../types';
 
 export function Completion() {
   const { completionTasks, domains } = useCurriculum();
-  const [selectedChild, setSelectedChild] = useState<string>('');
+  const [selectedChildId, setSelectedChildId] = useState<number | ''>('');
   const [selectedTimeRange, setSelectedTimeRange] = useState('week');
   const [selectedSort, setSelectedSort] = useState('latest');
 
   // 필터링된 완료 과제
   const filteredTasks = completionTasks
-    .filter(task => !selectedChild || task.childId === selectedChild)
+    .filter(task => !selectedChildId || task.childId === selectedChildId)
     .sort((a, b) => {
       if (selectedSort === 'latest') {
         return new Date(b.completedAt || '').getTime() - new Date(a.completedAt || '').getTime();
@@ -41,10 +40,10 @@ export function Completion() {
     return sto?.name || '로딩중...';
   };
 
-  // 도메인명 찾기
+  // 도메인명 찾기 (안전 처리)
   const getDomainName = (task: any) => {
     const domain = domains.find(d => d.id === task.domainId);
-    return domain?.name || '로딩중...';
+    return domain?.name ?? task.domainId;
   };
 
   // Excel 내보내기 데이터 준비
@@ -67,13 +66,13 @@ export function Completion() {
       {/* 필터 */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <select
-          value={selectedChild}
-          onChange={(e) => setSelectedChild(e.target.value)}
+          value={selectedChildId}
+          onChange={(e) => setSelectedChildId(e.target.value ? Number(e.target.value) : '')}
           className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pastel-purple"
         >
           <option value="">전체 아동</option>
-          {CHILDREN.map(child => (
-            <option key={child} value={child}>{child}</option>
+          {CANONICAL_CHILDREN.map(child => (
+            <option key={child.id} value={child.id}>{child.name}</option>
           ))}
         </select>
         <select

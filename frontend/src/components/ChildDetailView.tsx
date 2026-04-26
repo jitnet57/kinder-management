@@ -2,17 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Edit2, Trash2, Save, X, BarChart3 } from 'lucide-react';
 import { useCurriculum, SessionTask } from '../context/CurriculumContext';
 import { TaskGraphModal } from './TaskGraphModal';
-
-interface Child {
-  id: number;
-  name: string;
-  birthDate: string;
-  phone: string;
-  address: string;
-  notes: string;
-  color: string;
-  photo: string | null;
-}
+import { Child } from '../types';
 
 interface ChildDetailViewProps {
   child: Child;
@@ -27,7 +17,7 @@ export function ChildDetailView({ child, onBack }: ChildDetailViewProps) {
   const [selectedTaskForGraph, setSelectedTaskForGraph] = useState<SessionTask | null>(null);
 
   // 아동의 과제 필터링
-  const childTasks = sessionTasks.filter(task => task.childId === child.name);
+  const childTasks = sessionTasks.filter(task => task.childId === child.id);
 
   // 도메인명 찾기
   const getDomainName = (domainId: string) => {

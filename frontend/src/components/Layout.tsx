@@ -13,17 +13,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
     setUser(savedUser);
   }, []);
 
-  const navItems = [
-    { label: '대시보드', path: '/' },
-    { label: '스케줄', path: '/schedule' },
-    { label: '아동정보', path: '/children' },
-    { label: '데이터기록', path: '/session-log' },
-    { label: '완료목록', path: '/completion' },
-    { label: '커리큘럼', path: '/curriculum' },
-    { label: '📊 보고서', path: '/reports' },
-    { label: '📚 도움말', path: '/help' },
-    ...(user?.role === 'admin' ? [{ label: '👨‍💼 승인관리', path: '/admin/approvals' }] : []),
-  ];
+  const getNavItems = (role: string | undefined) => {
+    const common = [
+      { label: '대시보드', path: '/dashboard' },
+      { label: '스케줄', path: '/schedule' },
+    ];
+
+    if (role === 'parent') {
+      return [
+        ...common,
+        { label: '아동정보', path: '/children' },
+        { label: '보고서', path: '/reports' },
+      ];
+    }
+
+    if (role === 'therapist') {
+      return [
+        ...common,
+        { label: '아동정보', path: '/children' },
+        { label: '데이터기록', path: '/session-log' },
+        { label: '완료목록', path: '/completion' },
+        { label: '커리큘럼', path: '/curriculum' },
+        { label: '📊 보고서', path: '/reports' },
+        { label: '📚 도움말', path: '/help' },
+      ];
+    }
+
+    // admin: 전체 메뉴 + 승인관리
+    return [
+      ...common,
+      { label: '아동정보', path: '/children' },
+      { label: '데이터기록', path: '/session-log' },
+      { label: '완료목록', path: '/completion' },
+      { label: '커리큘럼', path: '/curriculum' },
+      { label: '📊 보고서', path: '/reports' },
+      { label: '📚 도움말', path: '/help' },
+      { label: '👨‍💼 승인관리', path: '/admin/approvals' },
+    ];
+  };
+
+  const navItems = getNavItems(user?.role);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -46,7 +75,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="flex items-center gap-6">
           <span className="text-sm text-gray-600">
-            {user?.name} ({user?.role})
+            {user?.name}
+            {user?.role === 'admin' && ' (👨‍💼 관리자)'}
+            {user?.role === 'therapist' && ' (👨‍⚕️ 치료사)'}
+            {user?.role === 'parent' && ' (👨‍👩‍👧‍👦 학부모)'}
           </span>
           <button
             onClick={logout}

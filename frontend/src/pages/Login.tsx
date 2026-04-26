@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Lock, AlertCircle, CheckCircle2, Loader } from 'lucide-react';
 import {
   generateDeviceId,
@@ -12,16 +13,29 @@ import {
   User,
 } from '../utils/deviceManager';
 
-const ADMIN_USERS = [
+const ALL_USERS = [
   {
     email: 'admin@akms.com',
     password: 'admin123',
     name: '관리자',
     role: 'admin' as const,
   },
+  {
+    email: 'therapist@akms.com',
+    password: 'therapist123',
+    name: '치료사1',
+    role: 'therapist' as const,
+  },
+  {
+    email: 'parent@akms.com',
+    password: 'parent123',
+    name: '학부모',
+    role: 'parent' as const,
+  },
 ];
 
 export function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,15 +48,26 @@ export function Login() {
     checkExistingLogin();
   }, []);
 
+  // 승인 완료 후 대시보드로 이동
+  useEffect(() => {
+    if (status === 'approved') {
+      const timer = setTimeout(() => {
+        console.log('✅ 대시보드로 이동');
+        navigate('/dashboard', { replace: true });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [status, navigate]);
+
   const checkExistingLogin = async () => {
+    // 개발 환경에서는 로그인 페이지에서 자동 리다이렉트 비활성화
+    // 사용자가 명시적으로 로그인하도록 유도
     const savedUser = getSavedUser();
     const savedDevice = getSavedDevice();
 
     if (savedUser && savedDevice) {
       const isValid = await verifyAccess(savedUser.id, savedDevice.id);
-      if (isValid) {
-        window.location.href = '/';
-      } else {
+      if (!isValid) {
         setError('저장된 사용자 또는 디바이스가 승인되지 않았습니다.');
       }
     }
@@ -50,21 +75,27 @@ export function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('📝 로그인 시작...');
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
       // 사용자 인증
-      const user = ADMIN_USERS.find(u => u.email === email && u.password === password);
+      console.log('🔍 사용자 인증 중...');
+      const user = ALL_USERS.find(u => u.email === email && u.password === password);
 
       if (!user) {
+        console.log('❌ 사용자 정보 불일치');
         setError('이메일 또는 비밀번호가 올바르지 않습니다.');
         setLoading(false);
         return;
       }
 
+      console.log('✅ 사용자 인증 완료');
+
       // 디바이스 정보 수집
+      console.log('📱 디바이스 정보 수집 중...');
       const deviceId = generateDeviceId();
       const ipAddress = await getUserIpAddress();
 
@@ -96,15 +127,19 @@ export function Login() {
       setDeviceInfo(newDevice);
 
       // 저장 (아직 승인 안 됨)
+      console.log('💾 데이터 저장 중...');
       await saveDevice(newDevice);
       await saveUser(newUser);
+      console.log('✅ 데이터 저장 완료');
 
       setSuccess(`✅ 로그인 요청이 접수되었습니다.\n\n📱 디바이스 ID: ${deviceId.slice(0, 8)}...\n⏳ 관리자의 승인을 기다리는 중입니다.`);
       setStatus('pending_approval');
+      console.log('⏳ 상태: pending_approval');
 
       // 데모: 관리자와 개발자 자동 승인 (테스트 목적)
-      // 실제 운영 환경에서는 이 코드 제거
+      console.log('⏰ 2초 후 자동 승인 시작...');
       setTimeout(() => {
+        console.log('🔐 자동 승인 중...');
         // 사용자와 디바이스에 자동 승인 추가
         const allUsers = JSON.parse(localStorage.getItem('akms_users') || '[]');
         const allDevices = JSON.parse(localStorage.getItem('akms_devices') || '[]');
@@ -129,10 +164,32 @@ export function Login() {
         localStorage.setItem('akms_users', JSON.stringify(allUsers));
         localStorage.setItem('akms_devices', JSON.stringify(allDevices));
 
+        console.log('✅ 자동 승인 완료');
+        console.log('✅ localStorage 업데이트 완료');
+
+        // 상태 변경
         setStatus('approved');
+        console.log('✅ 상태: approved');
+
+        // localStorage 업데이트 확인
+        const updatedUsers = JSON.parse(localStorage.getItem('akms_users') || '[]');
+        const updatedDevices = JSON.parse(localStorage.getItem('akms_devices') || '[]');
+
+        const approvedUser = updatedUsers.find((u: any) => u.id === newUser.id);
+        const approvedDevice = updatedDevices.find((d: any) => d.id === deviceId);
+
+        console.log('📋 업데이트된 사용자:', approvedUser);
+        console.log('📋 업데이트된 디바이스:', approvedDevice);
+
+        // 1초 대기 후 대시보드로 이동 (localStorage 업데이트 완료 확보)
+        setTimeout(() => {
+          console.log('🚀 대시보드로 즉시 이동 시도...');
+          window.location.href = '/dashboard';  // navigate 대신 window.location 사용
+        }, 500);
       }, 2000);
 
     } catch (err) {
+      console.log('❌ 에러:', err);
       setError('로그인 중 오류가 발생했습니다.');
       console.error(err);
     } finally {
@@ -256,7 +313,7 @@ export function Login() {
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
               disabled={loading}
             />
-            <p className="text-xs text-gray-500 mt-1">테스트: admin@akms.com</p>
+            <p className="text-xs text-gray-500 mt-1">테스트: admin@akms.com / therapist@akms.com / parent@akms.com</p>
           </div>
 
           <div>
@@ -271,7 +328,7 @@ export function Login() {
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
               disabled={loading}
             />
-            <p className="text-xs text-gray-500 mt-1">테스트: admin123</p>
+            <p className="text-xs text-gray-500 mt-1">테스트: admin123 / therapist123 / parent123</p>
           </div>
 
           <button

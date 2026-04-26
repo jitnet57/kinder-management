@@ -16,6 +16,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { useCurriculum } from '../context/CurriculumContext';
+import { CANONICAL_CHILDREN } from '../types';
 import { X, Download } from 'lucide-react';
 
 interface DashboardStats {
@@ -40,10 +41,10 @@ export function Dashboard() {
 
   // 상태 관리
   const [stats, setStats] = useState<DashboardStats>({
-    children: 12,
-    sessionsThisWeek: 48,
-    completionRate: 85,
-    activeCurriculum: 24,
+    children: 0,
+    sessionsThisWeek: 0,
+    completionRate: 0,
+    activeCurriculum: 0,
   });
 
   // 모달 상태
@@ -84,43 +85,150 @@ export function Dashboard() {
     { value: 'domain', label: '발달영역별' },
   ];
 
+  // 통계 계산 (useEffect로 이동)
+  useEffect(() => {
+    // 실제 데이터 기반 통계 계산
+    const children = CANONICAL_CHILDREN.length;
+
+    // 이번 주 세션 계산
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const sessionsThisWeek = completionTasks.filter(task => {
+      const taskDate = new Date(task.completedAt || '');
+      return taskDate >= weekAgo;
+    }).length;
+
+    // 완료율 계산
+    const completionRate = completionTasks.length > 0
+      ? Math.round((completionTasks.filter(t => t.completed).length / completionTasks.length) * 100)
+      : 0;
+
+    // 활성 커리큘럼 (총 LTO 수)
+    const activeCurriculum = domains.reduce((acc, d) => acc + d.ltos.length, 0);
+
+    setStats({
+      children,
+      sessionsThisWeek,
+      completionRate,
+      activeCurriculum,
+    });
+  }, [completionTasks, domains]);
+
   // 그래프 데이터 로드
   useEffect(() => {
     loadChartData();
   }, [selectedChart, timeRange, groupBy]);
 
-  const loadChartData = async () => {
+  const loadChartData = () => {
     setLoading(true);
     try {
-      // 실제로는 API 호출
-      const response = await fetch('http://localhost:3000/api/reports/generate', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chartType: selectedChart,
-          timeRange,
-          groupBy,
-          includeStats: true,
-        }),
-      });
-
-      if (!response.ok) {
-        // API 실패시 샘플 데이터 사용
-        setSampleChartData(selectedChart);
-        return;
-      }
-
-      const data = await response.json();
-      setChartData(data.chart);
+      // 실제 completionTasks 데이터 기반 차트 생성
+      generateChartFromData(selectedChart, timeRange, groupBy);
     } catch (err) {
-      // 에러시 샘플 데이터 사용
+      console.error('Chart generation error:', err);
       setSampleChartData(selectedChart);
     } finally {
       setLoading(false);
     }
+  };
+
+  // completionTasks 데이터 기반 차트 생성
+  const generateChartFromData = (type: string, range: string, group: string) => {
+    // 시간 범위에 따라 필터링
+    let filteredTasks = completionTasks;
+    const now = new Date();
+    let startDate = new Date();
+
+    switch (range) {
+      case '7d':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case '90d':
+        startDate.setDate(now.getDate() - 90);
+        break;
+      case '365d':
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+
+    filteredTasks = completionTasks.filter(task => {
+      const taskDate = new Date(task.completedAt || '');
+      return taskDate >= startDate;
+    });
+
+    if (filteredTasks.length === 0) {
+      setSampleChartData(type);
+      return;
+    }
+
+    // 그룹화 방식에 따라 데이터 변환
+    let chartTypeToUse = type;
+    let data: any[] = [];
+
+    if (group === 'daily') {
+      // 날짜별 점수
+      const scoresByDate = filteredTasks.reduce((acc: any[], task) => {
+        const date = new Date(task.completedAt || '').toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        const existing = acc.find(d => d.date === date);
+        if (existing) {
+          existing.score = (existing.score + task.score) / 2;
+          existing.count += 1;
+        } else {
+          acc.push({ date, score: task.score, count: 1 });
+        }
+        return acc;
+      }, []);
+      data = scoresByDate.slice(-10);
+    } else if (group === 'child') {
+      // 아동별 점수
+      const scoresByChild = CANONICAL_CHILDREN.map(child => {
+        const childTasks = filteredTasks.filter(t => t.childId === child.id);
+        return {
+          name: child.name,
+          score: childTasks.length > 0 ? Math.round(childTasks.reduce((sum, t) => sum + t.score, 0) / childTasks.length) : 0,
+          sessions: childTasks.length,
+        };
+      });
+      data = scoresByChild.filter(d => d.sessions > 0);
+    } else if (group === 'domain') {
+      // 발달영역별 점수
+      const scoresByDomain: { [key: string]: { sum: number; count: number } } = {};
+      filteredTasks.forEach(task => {
+        const domain = domains.find(d => d.id === task.domainId);
+        if (domain) {
+          if (!scoresByDomain[domain.name]) {
+            scoresByDomain[domain.name] = { sum: 0, count: 0 };
+          }
+          scoresByDomain[domain.name].sum += task.score;
+          scoresByDomain[domain.name].count += 1;
+        }
+      });
+      data = Object.entries(scoresByDomain).map(([name, stats]) => ({
+        name,
+        score: Math.round(stats.sum / stats.count),
+        count: stats.count,
+      }));
+    }
+
+    if (data.length === 0) {
+      setSampleChartData(type);
+      return;
+    }
+
+    // 차트 타입에 따라 데이터 포맷 조정
+    const average = data.reduce((sum, d) => sum + (d.score || 0), 0) / data.length;
+    setChartData({
+      chartType: type,
+      data,
+      stats: {
+        average: Math.round(average * 10) / 10,
+        trend: average > 70 ? '↗️ 상향' : average > 50 ? '→ 유지' : '↘️ 하향',
+        improvement: 0.15,
+      },
+    });
   };
 
   // 샘플 데이터
@@ -598,22 +706,29 @@ export function Dashboard() {
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-white border-opacity-20">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
             <span>📋 최근 활동</span>
-            <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full">오늘</span>
+            <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full">최근 5개</span>
           </h3>
           <div className="space-y-3">
-            {[
-              { time: '14:30', activity: '민준 - 단어발음 (90점)', color: 'text-green-600' },
-              { time: '12:15', activity: '소영 - 색상분류 (75점)', color: 'text-yellow-600' },
-              { time: '10:45', activity: '지호 - 숫자읽기 (85점)', color: 'text-blue-600' },
-              { time: '09:00', activity: '영희 - 사회상호작용 (88점)', color: 'text-purple-600' },
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-start gap-3 pb-3 border-b border-gray-100 last:border-0">
-                <span className="text-xs text-gray-500 font-mono whitespace-nowrap">{item.time}</span>
-                <div className="flex-1">
-                  <p className={`text-sm font-medium ${item.color}`}>{item.activity}</p>
-                </div>
-              </div>
-            ))}
+            {completionTasks
+              .slice()
+              .sort((a, b) => new Date(b.completedAt || '').getTime() - new Date(a.completedAt || '').getTime())
+              .slice(0, 5)
+              .map((task, idx) => {
+                const child = CANONICAL_CHILDREN.find(c => c.id === task.childId);
+                const domain = domains.find(d => d.id === task.domainId);
+                const time = task.completedAt ? new Date(task.completedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '-';
+                const colors = ['text-green-600', 'text-yellow-600', 'text-blue-600', 'text-purple-600', 'text-pink-600'];
+                return (
+                  <div key={task.id || idx} className="flex items-start gap-3 pb-3 border-b border-gray-100 last:border-0">
+                    <span className="text-xs text-gray-500 font-mono whitespace-nowrap">{time}</span>
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${colors[idx % colors.length]}`}>
+                        {child?.name || 'Unknown'} - {domain?.name || 'Unknown'} ({task.score}점)
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
 

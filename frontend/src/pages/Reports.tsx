@@ -1,16 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useCurriculum } from '../context/CurriculumContext';
+import { CANONICAL_CHILDREN } from '../types';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ScatterChart, Scatter } from 'recharts';
-import { Download, TrendingUp, Users, Award, Target } from 'lucide-react';
+import { Download, TrendingUp, Users, Award, Target, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, WidthType, TextRun } from 'docx';
-
-const CHILDREN_DATA = [
-  { id: 'c1', name: '민준', color: '#FFB6D9' },
-  { id: 'c2', name: '소영', color: '#B4D7FF' },
-  { id: 'c3', name: '지호', color: '#C1FFD7' },
-  { id: 'c4', name: '연서', color: '#FFE4B5' },
-];
+import { jsPDF } from 'jspdf';
 
 const COLORS = ['#FFB6D9', '#B4D7FF', '#C1FFD7', '#FFE4B5', '#D7C1FF', '#FFD7E4'];
 
@@ -25,12 +20,12 @@ const CHART_TYPES = [
 export function Reports() {
   const { completionTasks, domains } = useCurriculum();
   const [reportType, setReportType] = useState<'individual' | 'overall'>('individual');
-  const [selectedChild, setSelectedChild] = useState<string>('민준');
+  const [selectedChildId, setSelectedChildId] = useState<number>(1);
   const [chartType, setChartType] = useState<'line' | 'bar' | 'pie' | 'area' | 'scatter'>('line');
 
   // 아동별 데이터 필터링
   const childReportData = useMemo(() => {
-    const tasks = completionTasks.filter(task => task.childId === selectedChild);
+    const tasks = completionTasks.filter(task => task.childId === selectedChildId);
 
     if (tasks.length === 0) {
       return {
@@ -71,13 +66,12 @@ export function Reports() {
     const domainScores: { [key: string]: { sum: number; count: number } } = {};
     tasks.forEach(task => {
       const domain = domains.find(d => d.id === task.domainId);
-      if (domain) {
-        if (!domainScores[domain.name]) {
-          domainScores[domain.name] = { sum: 0, count: 0 };
-        }
-        domainScores[domain.name].sum += task.score;
-        domainScores[domain.name].count += 1;
+      const domainName = domain?.name ?? task.domainId;
+      if (!domainScores[domainName]) {
+        domainScores[domainName] = { sum: 0, count: 0 };
       }
+      domainScores[domainName].sum += task.score;
+      domainScores[domainName].count += 1;
     });
 
     const scoresByDomain = Object.entries(domainScores).map(([name, data]) => ({
@@ -95,7 +89,7 @@ export function Reports() {
       scoresByDate,
       scoresByDomain,
     };
-  }, [selectedChild, completionTasks, domains]);
+  }, [selectedChildId, completionTasks, domains]);
 
   // 전체 통계
   const overallStats = useMemo(() => {
@@ -111,8 +105,8 @@ export function Reports() {
     }
 
     // 아동별 통계
-    const childStats = CHILDREN_DATA.map(child => {
-      const tasks = completionTasks.filter(task => task.childId === child.name);
+    const childStats = CANONICAL_CHILDREN.map(child => {
+      const tasks = completionTasks.filter(task => task.childId === child.id);
       return {
         name: child.name,
         color: child.color,
@@ -125,13 +119,12 @@ export function Reports() {
     const domainScores: { [key: string]: { sum: number; count: number } } = {};
     completionTasks.forEach(task => {
       const domain = domains.find(d => d.id === task.domainId);
-      if (domain) {
-        if (!domainScores[domain.name]) {
-          domainScores[domain.name] = { sum: 0, count: 0 };
-        }
-        domainScores[domain.name].sum += task.score;
-        domainScores[domain.name].count += 1;
+      const domainName = domain?.name ?? task.domainId;
+      if (!domainScores[domainName]) {
+        domainScores[domainName] = { sum: 0, count: 0 };
       }
+      domainScores[domainName].sum += task.score;
+      domainScores[domainName].count += 1;
     });
 
     const domainStats = Object.entries(domainScores).map(([name, data]) => ({
@@ -306,14 +299,18 @@ export function Reports() {
     }
   };
 
-  const handleExport = async (format: 'json' | 'excel' | 'word') => {
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  const handleExport = async (format: 'json' | 'excel' | 'word' | 'pdf') => {
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `report-${selectedChild || 'all'}-${timestamp}`;
+    const selectedChildName = CANONICAL_CHILDREN.find(c => c.id === selectedChildId)?.name || 'all';
+    const filename = `report-${selectedChildName}-${timestamp}`;
 
     try {
       if (format === 'json') {
+        const selectedChildName = CANONICAL_CHILDREN.find(c => c.id === selectedChildId)?.name || 'Unknown';
         const data = reportType === 'individual'
-          ? { type: 'individual', child: selectedChild, data: childReportData }
+          ? { type: 'individual', child: selectedChildName, data: childReportData }
           : { type: 'overall', data: overallStats };
 
         const dataStr = JSON.stringify(data, null, 2);
@@ -327,10 +324,11 @@ export function Reports() {
       } else if (format === 'excel') {
         if (reportType === 'individual') {
           const wb = XLSX.utils.book_new();
+          const selectedChildName = CANONICAL_CHILDREN.find(c => c.id === selectedChildId)?.name || 'Unknown';
 
           // 통계 시트
           const statsData = [
-            ['아동', selectedChild],
+            ['아동', selectedChildName],
             ['총 세션', childReportData.totalSessions],
             ['평균 점수', childReportData.avgScore + '점'],
             ['개선도', childReportData.improvementRate + '%'],
@@ -389,6 +387,7 @@ export function Reports() {
         let doc;
 
         if (reportType === 'individual') {
+          const selectedChildName = CANONICAL_CHILDREN.find(c => c.id === selectedChildId)?.name || 'Unknown';
           const tableRows = [
             new TableRow({
               children: [
@@ -399,7 +398,7 @@ export function Reports() {
             new TableRow({
               children: [
                 new TableCell({ children: [new Paragraph('아동')] }),
-                new TableCell({ children: [new Paragraph(selectedChild)] }),
+                new TableCell({ children: [new Paragraph(selectedChildName)] }),
               ],
             }),
             new TableRow({
@@ -427,7 +426,7 @@ export function Reports() {
               children: [
                 new Paragraph({
                   children: [new TextRun({
-                    text: `${selectedChild} 아동 보고서`,
+                    text: `${selectedChildName} 아동 보고서`,
                     bold: true,
                     size: 64,
                   })],
@@ -567,6 +566,131 @@ export function Reports() {
         element.click();
         document.body.removeChild(element);
         URL.revokeObjectURL(element.href);
+      } else if (format === 'pdf') {
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const margin = 15;
+        let yPosition = 15;
+
+        // 헬퍼 함수: 간단한 테이블 그리기
+        const drawTable = (title: string, headers: string[], rows: (string | number)[][], startY: number) => {
+          let y = startY;
+          const pageHeightLimit = pageHeight - 20;
+          const colWidths = headers.map(() => (pageWidth - margin * 2) / headers.length);
+          const rowHeight = 8;
+
+          // 페이지 넘김 체크
+          if (y > pageHeightLimit - 30) {
+            pdf.addPage();
+            y = 15;
+          }
+
+          // 제목
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(title, margin, y);
+          y += 8;
+
+          // 헤더
+          pdf.setFillColor(200, 200, 255);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(9);
+          headers.forEach((header, i) => {
+            pdf.rect(margin + i * colWidths[i], y, colWidths[i], rowHeight, 'F');
+            const x = margin + i * colWidths[i] + 2;
+            pdf.text(header, x, y + 6);
+          });
+          y += rowHeight;
+
+          // 데이터 행
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(8);
+          rows.forEach((row) => {
+            if (y > pageHeightLimit - 10) {
+              pdf.addPage();
+              y = 15;
+              // 헤더 반복
+              pdf.setFillColor(200, 200, 255);
+              pdf.setFont('helvetica', 'bold');
+              pdf.setFontSize(9);
+              headers.forEach((header, i) => {
+                pdf.rect(margin + i * colWidths[i], y, colWidths[i], rowHeight, 'F');
+                const x = margin + i * colWidths[i] + 2;
+                pdf.text(header, x, y + 6);
+              });
+              y += rowHeight;
+              pdf.setFont('helvetica', 'normal');
+              pdf.setFontSize(8);
+            }
+
+            pdf.setDrawColor(220, 220, 220);
+            row.forEach((cell, i) => {
+              pdf.rect(margin + i * colWidths[i], y, colWidths[i], rowHeight);
+              const x = margin + i * colWidths[i] + 2;
+              pdf.text(String(cell), x, y + 6);
+            });
+            y += rowHeight;
+          });
+
+          return y + 5;
+        };
+
+        if (reportType === 'individual') {
+          const selectedChildName = CANONICAL_CHILDREN.find(c => c.id === selectedChildId)?.name || 'Unknown';
+          pdf.setFontSize(18);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`${selectedChildName} 아동 보고서`, pageWidth / 2, yPosition, { align: 'center' });
+          yPosition += 15;
+
+          // 통계 요약
+          const summaryRows = [
+            ['아동', selectedChildName],
+            ['총 세션', childReportData.totalSessions.toString()],
+            ['평균 점수', childReportData.avgScore + '점'],
+            ['개선도', childReportData.improvementRate + '%'],
+          ];
+          yPosition = drawTable('📊 통계 요약', ['항목', '값'], summaryRows, yPosition);
+
+          // 날짜별 점수
+          if (childReportData.scoresByDate.length > 0) {
+            const dateRows = childReportData.scoresByDate.map(d => [d.date, d.score.toString()]);
+            yPosition = drawTable('📅 날짜별 점수', ['날짜', '점수'], dateRows, yPosition);
+          }
+
+          // 발달영역별 점수
+          if (childReportData.scoresByDomain.length > 0) {
+            const domainRows = childReportData.scoresByDomain.map(d => [d.name, d.count.toString(), d.score.toString()]);
+            yPosition = drawTable('🎯 발달영역별 점수', ['발달영역', '세션', '평균'], domainRows, yPosition);
+          }
+        } else {
+          pdf.setFontSize(18);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('전체 통계 보고서', pageWidth / 2, yPosition, { align: 'center' });
+          yPosition += 15;
+
+          // 요약
+          const summaryRows = [
+            ['등록 아동', overallStats.totalChildren.toString()],
+            ['총 세션', overallStats.totalSessions.toString()],
+            ['평균 점수', overallStats.avgScoreOverall + '점'],
+          ];
+          yPosition = drawTable('📊 요약', ['항목', '값'], summaryRows, yPosition);
+
+          // 아동별 성과
+          if (overallStats.childStats.length > 0) {
+            const childRows = overallStats.childStats.map(c => [c.name, c.sessions.toString(), c.avgScore.toString()]);
+            yPosition = drawTable('👥 아동별 성과', ['아동', '세션', '평균'], childRows, yPosition);
+          }
+
+          // 발달영역별 통계
+          if (overallStats.domainStats.length > 0) {
+            const domainRows = overallStats.domainStats.map(d => [d.name, d.count.toString(), d.score.toString()]);
+            yPosition = drawTable('🎯 발달영역별 통계', ['발달영역', '세션', '평균'], domainRows, yPosition);
+          }
+        }
+
+        pdf.save(`${filename}.pdf`);
       }
     } catch (error) {
       console.error('Export failed:', error);
@@ -618,17 +742,17 @@ export function Reports() {
           <div className="glass rounded-2xl p-6">
             <label className="block text-sm font-bold text-gray-700 mb-3">아동 선택</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {CHILDREN_DATA.map(child => (
+              {CANONICAL_CHILDREN.map(child => (
                 <button
                   key={child.id}
-                  onClick={() => setSelectedChild(child.name)}
+                  onClick={() => setSelectedChildId(child.id)}
                   className={`p-3 rounded-lg transition border-2 ${
-                    selectedChild === child.name
+                    selectedChildId === child.id
                       ? 'border-pastel-purple bg-pastel-purple bg-opacity-20'
                       : 'border-transparent hover:border-gray-200'
                   }`}
                   style={{
-                    backgroundColor: selectedChild === child.name ? undefined : `${child.color}20`
+                    backgroundColor: selectedChildId === child.id ? undefined : `${child.color}20`
                   }}
                 >
                   <div
@@ -693,6 +817,12 @@ export function Reports() {
                       className="px-3 py-1 bg-orange-500 text-white rounded text-xs font-semibold hover:bg-orange-600 transition"
                     >
                       Word
+                    </button>
+                    <button
+                      onClick={() => handleExport('pdf')}
+                      className="px-3 py-1 bg-red-500 text-white rounded text-xs font-semibold hover:bg-red-600 transition"
+                    >
+                      PDF
                     </button>
                   </div>
                   <p className="text-xs font-semibold text-gray-600">내보내기</p>
@@ -811,6 +941,12 @@ export function Reports() {
                   className="px-3 py-1 bg-orange-500 text-white rounded text-xs font-semibold hover:bg-orange-600 transition"
                 >
                   Word
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  className="px-3 py-1 bg-red-500 text-white rounded text-xs font-semibold hover:bg-red-600 transition"
+                >
+                  PDF
                 </button>
               </div>
               <p className="text-xs font-semibold text-gray-600">내보내기</p>

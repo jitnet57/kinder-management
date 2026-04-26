@@ -5,6 +5,8 @@ import { useCurriculum } from '../context/CurriculumContext';
 export function Curriculum() {
   const { domains, addDomain, editDomain, deleteDomain, addLTO, editLTO, deleteLTO, addSTO, editSTO, deleteSTO } = useCurriculum();
   const [expandedDomains, setExpandedDomains] = useState<string[]>([]);
+  const [expandedLTOs, setExpandedLTOs] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // 입력 상태
   const [showAddDomain, setShowAddDomain] = useState(false);
@@ -20,6 +22,41 @@ export function Curriculum() {
   const [addingSTO, setAddingSTO] = useState<string | null>(null);
   const [newSTOName, setNewSTOName] = useState('');
 
+  // 검색 필터링 로직
+  const filteredDomains = searchQuery.trim() === ''
+    ? domains
+    : domains.filter(domain => {
+        const query = searchQuery.toLowerCase();
+        const domainMatches = domain.name.toLowerCase().includes(query);
+        const ltoMatches = domain.ltos.some(lto =>
+          lto.name.toLowerCase().includes(query)
+        );
+        const stoMatches = domain.ltos.some(lto =>
+          lto.stos.some(sto => sto.name.toLowerCase().includes(query))
+        );
+        return domainMatches || ltoMatches || stoMatches;
+      });
+
+  // 검색 시 매칭된 도메인과 LTO 자동 확장
+  const autoExpandDomains = searchQuery.trim() === ''
+    ? []
+    : filteredDomains.map(d => d.id);
+
+  const autoExpandLTOs = searchQuery.trim() === ''
+    ? []
+    : filteredDomains.flatMap(domain =>
+        domain.ltos
+          .filter(lto => {
+            const query = searchQuery.toLowerCase();
+            return lto.name.toLowerCase().includes(query) ||
+              lto.stos.some(sto => sto.name.toLowerCase().includes(query));
+          })
+          .map(lto => lto.id)
+      );
+
+  const actualExpandedDomains = searchQuery.trim() === '' ? expandedDomains : autoExpandDomains;
+  const actualExpandedLTOs = searchQuery.trim() === '' ? expandedLTOs : autoExpandLTOs;
+
   // 처음 로드 시 모든 도메인 확장
   if (expandedDomains.length === 0 && domains.length > 0) {
     setExpandedDomains(domains.map(d => d.id));
@@ -28,6 +65,12 @@ export function Curriculum() {
   const toggleDomain = (id: string) => {
     setExpandedDomains(prev =>
       prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
+  };
+
+  const toggleLTO = (id: string) => {
+    setExpandedLTOs(prev =>
+      prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id]
     );
   };
 
@@ -72,7 +115,18 @@ export function Curriculum() {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-gray-800 mb-8">📚 커리큘럼 관리</h2>
+      <h2 className="text-3xl font-bold text-gray-800 mb-4">📚 커리큘럼 관리</h2>
+
+      {/* 검색창 */}
+      <div className="mb-8">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="도메인, LTO, STO 검색..."
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
+        />
+      </div>
 
       {/* 발달영역 추가 폼 */}
       {showAddDomain ? (
@@ -112,7 +166,12 @@ export function Curriculum() {
 
       {/* 커리큘럼 트리 */}
       <div className="space-y-4">
-        {domains.map(domain => (
+        {filteredDomains.length === 0 ? (
+          <div className="glass rounded-2xl p-12 text-center">
+            <p className="text-gray-500 text-lg">검색 결과가 없습니다.</p>
+          </div>
+        ) : (
+          filteredDomains.map(domain => (
           <div key={domain.id} className="glass rounded-2xl overflow-hidden border-none">
             {/* 발달영역 헤더 */}
             <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-pastel-purple to-pastel-pink text-white font-bold hover:opacity-90 transition">
@@ -122,7 +181,7 @@ export function Curriculum() {
               >
                 <ChevronDown
                   size={20}
-                  className={`transition ${expandedDomains.includes(domain.id) ? 'rotate-0' : '-rotate-90'}`}
+                  className={`transition ${actualExpandedDomains.includes(domain.id) ? 'rotate-0' : '-rotate-90'}`}
                 />
                 {editingDomain === domain.id ? (
                   <input
@@ -175,26 +234,43 @@ export function Curriculum() {
             </div>
 
             {/* LTO 리스트 */}
-            {expandedDomains.includes(domain.id) && (
+            {actualExpandedDomains.includes(domain.id) && (
               <div className="bg-white">
                 {domain.ltos.map((lto, idx) => (
                   <div key={lto.id} className={`${idx > 0 ? 'border-t border-gray-100' : ''}`}>
-                    {/* LTO */}
-                    <div className="px-6 py-4 bg-white bg-opacity-20 flex items-center justify-between border-b border-white border-opacity-20">
+                    {/* LTO 헤더 (클릭 가능한 아코디언) */}
+                    <div className="px-6 py-4 bg-white bg-opacity-20 flex items-center justify-between border-b border-white border-opacity-20 hover:bg-opacity-30 transition cursor-pointer">
                       <div className="flex-1">
-                        {editingLTO === lto.id ? (
-                          <input
-                            type="text"
-                            value={editingLTOName}
-                            onChange={(e) => setEditingLTOName(e.target.value)}
-                            className="px-2 py-1 border border-gray-300 rounded"
-                            autoFocus
+                        <button
+                          onClick={() => toggleLTO(lto.id)}
+                          className="flex items-start gap-2 w-full text-left"
+                        >
+                          <ChevronDown
+                            size={18}
+                            className={`transition mt-1 flex-shrink-0 ${actualExpandedLTOs.includes(lto.id) ? 'rotate-0' : '-rotate-90'}`}
                           />
-                        ) : (
-                          <p className="font-semibold text-gray-800 ml-4">└ LTO: {lto.name}</p>
-                        )}
+                          <div className="flex-1">
+                            {editingLTO === lto.id ? (
+                              <input
+                                type="text"
+                                value={editingLTOName}
+                                onChange={(e) => setEditingLTOName(e.target.value)}
+                                className="px-2 py-1 border border-gray-300 rounded"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <>
+                                <p className="font-semibold text-gray-800">LTO: {lto.name}</p>
+                                {lto.goal && (
+                                  <p className="text-xs text-gray-500 mt-1">{lto.goal}</p>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </button>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                         {editingLTO === lto.id ? (
                           <>
                             <button
@@ -231,6 +307,67 @@ export function Curriculum() {
                         )}
                       </div>
                     </div>
+
+                    {/* teachingTips 패널 (LTO 확장 시 표시) */}
+                    {actualExpandedLTOs.includes(lto.id) && lto.teachingTips && Object.keys(lto.teachingTips).length > 0 && (
+                      <div className="px-6 py-4 bg-blue-50 border-b border-white border-opacity-20">
+                        <h4 className="font-semibold text-gray-700 mb-3">교수 팁</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {lto.teachingTips && (
+                            <>
+                              {lto.teachingTips.prompt_hierarchy && (
+                                <div className="bg-white p-3 rounded border-l-4 border-blue-400">
+                                  <p className="text-xs font-semibold text-gray-600">프롬프트 계층화</p>
+                                  <p className="text-sm text-gray-700 mt-1">{lto.teachingTips.prompt_hierarchy}</p>
+                                </div>
+                              )}
+                              {lto.teachingTips.reinforcement && (
+                                <div className="bg-white p-3 rounded border-l-4 border-green-400">
+                                  <p className="text-xs font-semibold text-gray-600">강화</p>
+                                  <p className="text-sm text-gray-700 mt-1">{lto.teachingTips.reinforcement}</p>
+                                </div>
+                              )}
+                              {lto.teachingTips.error_correction && (
+                                <div className="bg-white p-3 rounded border-l-4 border-yellow-400">
+                                  <p className="text-xs font-semibold text-gray-600">오류 수정</p>
+                                  <p className="text-sm text-gray-700 mt-1">{lto.teachingTips.error_correction}</p>
+                                </div>
+                              )}
+                              {lto.teachingTips.generalization && (
+                                <div className="bg-white p-3 rounded border-l-4 border-purple-400">
+                                  <p className="text-xs font-semibold text-gray-600">일반화</p>
+                                  <p className="text-sm text-gray-700 mt-1">{lto.teachingTips.generalization}</p>
+                                </div>
+                              )}
+                              {lto.teachingTips.data_collection && (
+                                <div className="bg-white p-3 rounded border-l-4 border-red-400">
+                                  <p className="text-xs font-semibold text-gray-600">데이터 수집</p>
+                                  <p className="text-sm text-gray-700 mt-1">{lto.teachingTips.data_collection}</p>
+                                </div>
+                              )}
+                              {lto.teachingTips.prerequisite && (
+                                <div className="bg-white p-3 rounded border-l-4 border-indigo-400">
+                                  <p className="text-xs font-semibold text-gray-600">필수 조건</p>
+                                  <p className="text-sm text-gray-700 mt-1">{lto.teachingTips.prerequisite}</p>
+                                </div>
+                              )}
+                              {lto.teachingTips.motivation && (
+                                <div className="bg-white p-3 rounded border-l-4 border-pink-400">
+                                  <p className="text-xs font-semibold text-gray-600">동기 유발</p>
+                                  <p className="text-sm text-gray-700 mt-1">{lto.teachingTips.motivation}</p>
+                                </div>
+                              )}
+                              {lto.teachingTips.family_involvement && (
+                                <div className="bg-white p-3 rounded border-l-4 border-orange-400">
+                                  <p className="text-xs font-semibold text-gray-600">가족 참여</p>
+                                  <p className="text-sm text-gray-700 mt-1">{lto.teachingTips.family_involvement}</p>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* STO 리스트 */}
                     <div className="bg-white bg-opacity-10">
@@ -368,7 +505,8 @@ export function Curriculum() {
               </div>
             )}
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,12 @@
       "Bash(npm install *)",
       "Bash(curl -s http://localhost:5173/)",
       "Read(//e/mafia-codereview-harness/**)",
-      "WebFetch(domain:www.thetalcottcenter.com)"
+      "WebFetch(domain:www.thetalcottcenter.com)",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(cd e:\\\\\\\\kinder-management)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

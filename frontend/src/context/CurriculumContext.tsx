@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import curriculumData from '../data/curriculum.json';
+import { SessionTask, DevelopmentDomain as DevelopmentDomainType, ChildId } from '../types';
+import { storageManager } from '../utils/storage';
+
+// Re-export for backward compatibility
+export { STO, LTO } from '../data/curriculum.json';
 
 export interface STO {
   id: string;
@@ -25,21 +30,6 @@ export interface DevelopmentDomain {
   ltos: LTO[];
 }
 
-export interface SessionTask {
-  id: string;
-  childId: string;
-  domainId: string;
-  ltoId: string;
-  stoId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  score: number;
-  notes: string;
-  completed: boolean;
-  completedAt?: string;
-}
-
 interface CurriculumContextType {
   domains: DevelopmentDomain[];
   sessionTasks: SessionTask[];
@@ -60,12 +50,12 @@ interface CurriculumContextType {
   editSTO: (domainId: string, ltoId: string, stoId: string, name: string) => void;
   deleteSTO: (domainId: string, ltoId: string, stoId: string) => void;
 
-  // Session task operations
-  addSessionTask: (childId: string, domainId: string, ltoId: string, stoId: string, date: string) => void;
+  // Session task operations - childId now number (1-4)
+  addSessionTask: (childId: number, domainId: string, ltoId: string, stoId: string, date: string) => void;
   updateSessionTask: (taskId: string, updates: Partial<SessionTask>) => void;
   deleteSessionTask: (taskId: string) => void;
   completeSessionTask: (taskId: string) => void;
-  getTasksByChild: (childId: string, date: string) => SessionTask[];
+  getTasksByChild: (childId: number, date: string) => SessionTask[];
 }
 
 const CurriculumContext = createContext<CurriculumContextType | undefined>(undefined);
@@ -97,11 +87,15 @@ const INITIAL_CURRICULUM: DevelopmentDomain[] = convertCurriculumData(curriculum
 
 // 샘플 세션 과제 생성
 const generateMockSessionTasks = (): SessionTask[] => {
-  const children = ['민준', '소영', '지호', '연서'];
+  const childIds: ChildId[] = [1, 2, 3, 4];
+  const domainIds = ['domain_mand', 'domain_tact']; // 실제 curriculum.json ID
+  const ltoIds = ['domain_mand_lto01', 'domain_tact_lto01']; // 실제 형식
+  const stoIds = ['domain_mand_lto01_sto1', 'domain_tact_lto01_sto1']; // 실제 형식
+
   const tasks: SessionTask[] = [];
   const today = new Date();
 
-  children.forEach((childId, childIdx) => {
+  childIds.forEach((childId, childIdx) => {
     for (let i = 0; i < 10; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
@@ -110,9 +104,9 @@ const generateMockSessionTasks = (): SessionTask[] => {
       tasks.push({
         id: `task-${childIdx}-${i}`,
         childId,
-        domainId: i % 2 === 0 ? 'd1' : 'd2',
-        ltoId: i % 2 === 0 ? 'l1' : 'l3',
-        stoId: i % 3 === 0 ? 's1' : (i % 3 === 1 ? 's2' : 's3'),
+        domainId: domainIds[i % 2],
+        ltoId: ltoIds[i % 2],
+        stoId: stoIds[i % 2],
         date: dateStr,
         startTime: `${9 + (i % 3)}:00`,
         endTime: `${10 + (i % 3)}:00`,
@@ -128,11 +122,15 @@ const generateMockSessionTasks = (): SessionTask[] => {
 
 // 샘플 완료 과제 생성
 const generateMockCompletionTasks = (): SessionTask[] => {
-  const children = ['민준', '소영', '지호', '연서'];
+  const childIds: ChildId[] = [1, 2, 3, 4];
+  const domainIds = ['domain_mand', 'domain_tact']; // 실제 curriculum.json ID
+  const ltoIds = ['domain_mand_lto02', 'domain_tact_lto02']; // 다른 LTO 사용
+  const stoIds = ['domain_mand_lto02_sto2', 'domain_tact_lto02_sto2']; // 다른 STO 사용
+
   const tasks: SessionTask[] = [];
   const today = new Date();
 
-  children.forEach((childId, childIdx) => {
+  childIds.forEach((childId, childIdx) => {
     for (let i = 0; i < 10; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - (15 + i));
@@ -141,9 +139,9 @@ const generateMockCompletionTasks = (): SessionTask[] => {
       tasks.push({
         id: `completion-${childIdx}-${i}`,
         childId,
-        domainId: i % 2 === 0 ? 'd1' : 'd2',
-        ltoId: i % 2 === 0 ? 'l2' : 'l4',
-        stoId: i % 3 === 0 ? 's4' : (i % 3 === 1 ? 's5' : 's6'),
+        domainId: domainIds[i % 2],
+        ltoId: ltoIds[i % 2],
+        stoId: stoIds[i % 2],
         date: dateStr,
         startTime: `${9 + (i % 3)}:00`,
         endTime: `${10 + (i % 3)}:00`,
@@ -159,9 +157,47 @@ const generateMockCompletionTasks = (): SessionTask[] => {
 };
 
 export function CurriculumProvider({ children }: { children: React.ReactNode }) {
-  const [domains, setDomains] = useState<DevelopmentDomain[]>(INITIAL_CURRICULUM);
-  const [sessionTasks, setSessionTasks] = useState<SessionTask[]>(generateMockSessionTasks());
+  const [domains, setDomains] = useState<DevelopmentDomain[]>(() => {
+    // Try to load from storage, fallback to initial curriculum
+    const stored = localStorage.getItem('kinder_curriculum_domains');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        return parsed.value || INITIAL_CURRICULUM;
+      } catch (error) {
+        console.error('Failed to parse stored curriculum domains:', error);
+        return INITIAL_CURRICULUM;
+      }
+    }
+    return INITIAL_CURRICULUM;
+  });
+
+  const [sessionTasks, setSessionTasks] = useState<SessionTask[]>(() => {
+    // Try to load from storage, fallback to generated mock tasks
+    const stored = localStorage.getItem('kinder_session_tasks');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        return parsed.value || generateMockSessionTasks();
+      } catch (error) {
+        console.error('Failed to parse stored session tasks:', error);
+        return generateMockSessionTasks();
+      }
+    }
+    return generateMockSessionTasks();
+  });
+
   const [completionTasks, setCompletionTasks] = useState<SessionTask[]>(generateMockCompletionTasks());
+
+  // Persist domains to storage whenever they change
+  useEffect(() => {
+    storageManager.set('curriculum_domains', domains);
+  }, [domains]);
+
+  // Persist session tasks to storage whenever they change
+  useEffect(() => {
+    storageManager.set('session_tasks', sessionTasks);
+  }, [sessionTasks]);
 
   // Domain operations
   const addDomain = useCallback((name: string) => {
@@ -305,7 +341,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
 
   // Session task operations
   const addSessionTask = useCallback(
-    (childId: string, domainId: string, ltoId: string, stoId: string, date: string) => {
+    (childId: number, domainId: string, ltoId: string, stoId: string, date: string) => {
       const newTask: SessionTask = {
         id: `t${Date.now()}`,
         childId,
@@ -349,7 +385,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
     }
   }, [sessionTasks]);
 
-  const getTasksByChild = useCallback((childId: string, date: string) => {
+  const getTasksByChild = useCallback((childId: number, date: string) => {
     return sessionTasks.filter(task => task.childId === childId && task.date === date);
   }, [sessionTasks]);
 

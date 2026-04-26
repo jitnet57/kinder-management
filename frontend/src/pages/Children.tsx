@@ -1,18 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Edit, Trash2, Plus, Search, Upload, X, Save } from 'lucide-react';
 import { ChildDetailView } from '../components/ChildDetailView';
+import { storageManager } from '../utils/storage';
+import { CANONICAL_CHILDREN, Child } from '../types';
 // import { exportChildrenToExcel, exportChildrenToWord } from '../utils/exportUtils';
-
-interface Child {
-  id: number;
-  name: string;
-  birthDate: string;
-  phone: string;
-  address: string;
-  notes: string;
-  color: string;
-  photo: string | null;
-}
 
 // 아바타 SVG 생성 함수
 const generateAvatar = (name: string, color: string) => {
@@ -20,53 +11,24 @@ const generateAvatar = (name: string, color: string) => {
   return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='${encodeURIComponent(color)}'/%3E%3Ccircle cx='100' cy='80' r='40' fill='white' opacity='0.3'/%3E%3Ctext x='100' y='140' font-size='60' font-weight='bold' text-anchor='middle' fill='white'%3E${initial}%3C/text%3E%3C/svg%3E`;
 };
 
-const MOCK_CHILDREN: Child[] = [
-  {
-    id: 1,
-    name: '민준',
-    birthDate: '2021-01-15',
-    phone: '010-1234-5678',
-    address: '서울시 강남구 테헤란로 123, 푸른숲아파트 101동',
-    notes: '언어발달 우수, 집중력이 매우 좋음. 한글 인식 수준 높음. 발음이 명확함.',
-    color: '#FFB6D9',
-    photo: generateAvatar('민', '#FFB6D9'),
-  },
-  {
-    id: 2,
-    name: '소영',
-    birthDate: '2021-06-10',
-    phone: '010-2345-6789',
-    address: '서울시 서초구 강남대로 45, 현대빌라 3층',
-    notes: '활발하고 사교적인 성격. 또래 아이들과의 상호작용 능력 우수. 음악에 관심 많음.',
-    color: '#B4D7FF',
-    photo: generateAvatar('소', '#B4D7FF'),
-  },
-  {
-    id: 3,
-    name: '지호',
-    birthDate: '2020-03-22',
-    phone: '010-3456-7890',
-    address: '서울시 강동구 구천면로 789, 삼성아파트 205동',
-    notes: '차분하고 침착함. 미세한 운동능력 발달 진행 중. 색상 구분 능력 우수. 집중 시간이 길음.',
-    color: '#C1FFD7',
-    photo: generateAvatar('지', '#C1FFD7'),
-  },
-  {
-    id: 4,
-    name: '연서',
-    birthDate: '2021-09-05',
-    phone: '010-4567-8901',
-    address: '경기도 성남시 분당구 정자동 456번지',
-    notes: '긍정적이고 밝은 성격. 새로운 것을 배우려는 의욕이 높음. 또래보다 발달 상황 빠름.',
-    color: '#FFE4B5',
-    photo: generateAvatar('연', '#FFE4B5'),
-  },
-];
-
 const COLORS = ['#FFB6D9', '#B4D7FF', '#C1FFD7', '#FFE4B5', '#D7C1FF', '#FFD7E4'];
 
 export function Children() {
-  const [children, setChildren] = useState<Child[]>(MOCK_CHILDREN);
+  const [children, setChildren] = useState<Child[]>(() => {
+    // Try to load from storage, fallback to CANONICAL_CHILDREN
+    const stored = localStorage.getItem('kinder_children');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        return parsed.value || CANONICAL_CHILDREN;
+      } catch (error) {
+        console.error('Failed to parse stored children:', error);
+        return CANONICAL_CHILDREN;
+      }
+    }
+    return CANONICAL_CHILDREN;
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -81,6 +43,11 @@ export function Children() {
     notes: '',
     color: COLORS[0],
   });
+
+  // Persist children to storage whenever they change
+  useEffect(() => {
+    storageManager.set('children', children);
+  }, [children]);
 
   const filteredChildren = children.filter(child =>
     child.name.toLowerCase().includes(searchQuery.toLowerCase())
