@@ -187,50 +187,56 @@ export function Schedule() {
                             return (
                               <div
                                 key={session.id}
-                                className="px-2 py-2 rounded-lg text-white text-xs font-semibold group"
-                                style={{ backgroundColor: session.color }}
+                                className="px-2 py-2 rounded-lg text-white text-xs font-semibold group hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer relative"
+                                style={{
+                                  backgroundColor: session.color,
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                                }}
                               >
+                                {/* 호버 오버레이 */}
+                                <div className="absolute inset-0 rounded-lg bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
+
                                 {isEditing ? (
-                                  <div className="space-y-1">
+                                  <div className="space-y-1 relative z-10">
                                     <input
                                       type="text"
                                       value={session.sessionName}
                                       onChange={(e) => updateSession(session.id, { sessionName: e.target.value })}
-                                      className="w-full px-2 py-1 text-xs rounded bg-white bg-opacity-30 text-white"
+                                      className="w-full px-2 py-1 text-xs rounded bg-white bg-opacity-40 text-white placeholder-white placeholder-opacity-60 font-semibold"
                                     />
                                     <div className="flex gap-1">
                                       <button
                                         onClick={() => setEditingSessionId(null)}
-                                        className="flex-1 px-1 py-1 bg-white bg-opacity-30 rounded text-xs hover:bg-opacity-50"
+                                        className="flex-1 px-1 py-1 bg-white bg-opacity-40 rounded text-xs hover:bg-opacity-60 font-semibold transition"
                                       >
                                         저장
                                       </button>
                                       <button
                                         onClick={() => setEditingSessionId(null)}
-                                        className="flex-1 px-1 py-1 bg-white bg-opacity-30 rounded text-xs hover:bg-opacity-50"
+                                        className="flex-1 px-1 py-1 bg-white bg-opacity-40 rounded text-xs hover:bg-opacity-60 font-semibold transition"
                                       >
                                         취소
                                       </button>
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="flex flex-col justify-between h-full">
+                                  <div className="flex flex-col justify-between h-full relative z-10">
                                     <div>
-                                      <div className="text-xs font-bold">[{child?.initials}]</div>
-                                      <div className="text-xs">{session.sessionName}</div>
-                                      <div className="text-xs opacity-80">{session.startTime}시-{session.endTime}시</div>
+                                      <div className="text-xs font-bold drop-shadow-sm">[{child?.initials}]</div>
+                                      <div className="text-xs font-semibold drop-shadow-sm">{session.sessionName}</div>
+                                      <div className="text-xs opacity-90 drop-shadow-sm">{session.startTime}시-{session.endTime}시</div>
                                     </div>
-                                    <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition">
+                                    <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition duration-200">
                                       <button
                                         onClick={() => setEditingSessionId(session.id)}
-                                        className="flex-1 px-1 py-0.5 bg-white bg-opacity-30 rounded text-xs hover:bg-opacity-50"
+                                        className="flex-1 px-1 py-0.5 bg-white bg-opacity-50 rounded text-xs hover:bg-opacity-70 font-semibold transition text-gray-800"
                                         title="수정"
                                       >
                                         <Edit size={12} className="mx-auto" />
                                       </button>
                                       <button
                                         onClick={() => deleteSession(session.id)}
-                                        className="flex-1 px-1 py-0.5 bg-white bg-opacity-30 rounded text-xs hover:bg-opacity-50"
+                                        className="flex-1 px-1 py-0.5 bg-white bg-opacity-50 rounded text-xs hover:bg-opacity-70 font-semibold transition text-gray-800"
                                         title="삭제"
                                       >
                                         <Trash2 size={12} className="mx-auto" />
