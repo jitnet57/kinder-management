@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useCurriculum } from '../context/CurriculumContext';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ScatterChart, Scatter } from 'recharts';
 import { Download, TrendingUp, Users, Award, Target } from 'lucide-react';
 
 const CHILDREN_DATA = [
@@ -12,10 +12,19 @@ const CHILDREN_DATA = [
 
 const COLORS = ['#FFB6D9', '#B4D7FF', '#C1FFD7', '#FFE4B5', '#D7C1FF', '#FFD7E4'];
 
+const CHART_TYPES = [
+  { value: 'line', label: '📈 라인 그래프', icon: '📉' },
+  { value: 'bar', label: '📊 막대 그래프', icon: '📊' },
+  { value: 'pie', label: '🥧 원형 그래프', icon: '🥧' },
+  { value: 'area', label: '🌊 영역 그래프', icon: '🌊' },
+  { value: 'scatter', label: '💫 산점도', icon: '💫' },
+];
+
 export function Reports() {
   const { completionTasks, domains } = useCurriculum();
   const [reportType, setReportType] = useState<'individual' | 'overall'>('individual');
   const [selectedChild, setSelectedChild] = useState<string>('민준');
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie' | 'area' | 'scatter'>('line');
 
   // 아동별 데이터 필터링
   const childReportData = useMemo(() => {
@@ -156,20 +165,414 @@ export function Reports() {
     };
   }, [completionTasks, domains]);
 
-  const handleExport = (format: 'json' | 'csv') => {
-    const data = reportType === 'individual'
-      ? { type: 'individual', child: selectedChild, data: childReportData }
-      : { type: 'overall', data: overallStats };
+  // 아동별 보고서 그래프 렌더링
+  const renderChildChart = () => {
+    if (childReportData.scoresByDate.length === 0) return null;
 
-    if (format === 'json') {
-      const dataStr = JSON.stringify(data, null, 2);
-      const element = document.createElement('a');
-      element.setAttribute('href', `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`);
-      element.setAttribute('download', `report-${selectedChild || 'all'}-${new Date().toISOString().split('T')[0]}.json`);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+    switch (chartType) {
+      case 'line':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={childReportData.scoresByDate}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Line type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6', r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={childReportData.scoresByDate}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Bar dataKey="score" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      case 'area':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={childReportData.scoresByDate}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Area type="monotone" dataKey="score" fill="#8b5cf6" stroke="#6d28d9" />
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+      case 'scatter':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <ScatterChart data={childReportData.scoresByDate} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" name="날짜" />
+              <YAxis dataKey="score" name="점수" domain={[0, 100]} />
+              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+              <Scatter name="점수" data={childReportData.scoresByDate} fill="#ec4899" />
+            </ScatterChart>
+          </ResponsiveContainer>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // 전체 통계 그래프 렌더링
+  const renderOverallChart = () => {
+    switch (chartType) {
+      case 'line':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={overallStats.childStats}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Line type="monotone" dataKey="avgScore" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6', r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={overallStats.childStats}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Bar dataKey="avgScore" radius={[8, 8, 0, 0]}>
+                {overallStats.childStats.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      case 'pie':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={overallStats.childStats}
+                dataKey="avgScore"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label
+              >
+                {overallStats.childStats.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        );
+      case 'area':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={overallStats.childStats}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Area type="monotone" dataKey="avgScore" fill="#10b981" stroke="#059669" />
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+      case 'scatter':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" name="아동" />
+              <YAxis dataKey="avgScore" name="평균 점수" domain={[0, 100]} />
+              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+              <Scatter name="평균 점수" data={overallStats.childStats} fill="#f59e0b" />
+            </ScatterChart>
+          </ResponsiveContainer>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const handleExport = async (format: 'json' | 'excel' | 'word') => {
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `report-${selectedChild || 'all'}-${timestamp}`;
+
+    try {
+      if (format === 'json') {
+        const data = reportType === 'individual'
+          ? { type: 'individual', child: selectedChild, data: childReportData }
+          : { type: 'overall', data: overallStats };
+
+        const dataStr = JSON.stringify(data, null, 2);
+        const element = document.createElement('a');
+        element.setAttribute('href', `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`);
+        element.setAttribute('download', `${filename}.json`);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      } else if (format === 'excel') {
+        const { default: XLSX } = await import('xlsx');
+
+        if (reportType === 'individual') {
+          const wb = XLSX.utils.book_new();
+
+          // 통계 시트
+          const statsData = [
+            ['아동', selectedChild],
+            ['총 세션', childReportData.totalSessions],
+            ['평균 점수', childReportData.avgScore + '점'],
+            ['개선도', childReportData.improvementRate + '%'],
+          ];
+          const ws1 = XLSX.utils.aoa_to_sheet(statsData);
+          XLSX.utils.book_append_sheet(wb, ws1, '통계');
+
+          // 날짜별 점수 시트
+          const dateData = [['날짜', '점수']];
+          childReportData.scoresByDate.forEach(d => {
+            dateData.push([d.date, d.score]);
+          });
+          const ws2 = XLSX.utils.aoa_to_sheet(dateData);
+          XLSX.utils.book_append_sheet(wb, ws2, '날짜별 점수');
+
+          // 발달영역별 점수 시트
+          const domainData = [['발달영역', '세션 수', '평균 점수']];
+          childReportData.scoresByDomain.forEach(d => {
+            domainData.push([d.name, d.count.toString(), d.score.toString()]);
+          });
+          const ws3 = XLSX.utils.aoa_to_sheet(domainData);
+          XLSX.utils.book_append_sheet(wb, ws3, '발달영역');
+
+          XLSX.writeFile(wb, `${filename}.xlsx`);
+        } else {
+          const wb = XLSX.utils.book_new();
+
+          // 요약 시트
+          const summaryData = [
+            ['등록 아동', overallStats.totalChildren.toString()],
+            ['총 세션', overallStats.totalSessions.toString()],
+            ['평균 점수', overallStats.avgScoreOverall + '점'],
+          ];
+          const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+          XLSX.utils.book_append_sheet(wb, ws1, '요약');
+
+          // 아동별 성과 시트
+          const childData = [['아동', '세션 수', '평균 점수']];
+          overallStats.childStats.forEach(c => {
+            childData.push([c.name, c.sessions.toString(), c.avgScore.toString()]);
+          });
+          const ws2 = XLSX.utils.aoa_to_sheet(childData);
+          XLSX.utils.book_append_sheet(wb, ws2, '아동별 성과');
+
+          // 발달영역별 통계 시트
+          const domainData = [['발달영역', '총 세션', '평균 점수']];
+          overallStats.domainStats.forEach(d => {
+            domainData.push([d.name, d.count.toString(), d.score.toString()]);
+          });
+          const ws3 = XLSX.utils.aoa_to_sheet(domainData);
+          XLSX.utils.book_append_sheet(wb, ws3, '발달영역');
+
+          XLSX.writeFile(wb, `${filename}.xlsx`);
+        }
+      } else if (format === 'word') {
+        const { Document, Packer, Paragraph, Table, TableCell, TableRow, WidthType, TextRun } = await import('docx');
+
+        let doc;
+
+        if (reportType === 'individual') {
+          const tableRows = [
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph('항목')] }),
+                new TableCell({ children: [new Paragraph('값')] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph('아동')] }),
+                new TableCell({ children: [new Paragraph(selectedChild)] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph(childReportData.totalSessions.toString())] }),
+                new TableCell({ children: [new Paragraph('총 세션')] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph('평균 점수')] }),
+                new TableCell({ children: [new Paragraph(childReportData.avgScore + '점')] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph('개선도')] }),
+                new TableCell({ children: [new Paragraph(childReportData.improvementRate + '%')] }),
+              ],
+            }),
+          ];
+
+          doc = new Document({
+            sections: [{
+              children: [
+                new Paragraph({
+                  children: [new TextRun({
+                    text: `${selectedChild} 아동 보고서`,
+                    bold: true,
+                    size: 64,
+                  })],
+                }),
+                new Paragraph({ text: '' }),
+                new Paragraph({
+                  children: [new TextRun({
+                    text: '📊 통계 요약',
+                    bold: true,
+                    size: 48,
+                  })],
+                }),
+                new Table({
+                  rows: tableRows,
+                  width: { size: 100, type: WidthType.PERCENTAGE },
+                }),
+                new Paragraph({ text: '' }),
+                new Paragraph({
+                  children: [new TextRun({
+                    text: '📅 날짜별 점수',
+                    bold: true,
+                    size: 48,
+                  })],
+                }),
+                new Table({
+                  rows: [
+                    new TableRow({
+                      children: [
+                        new TableCell({ children: [new Paragraph('날짜')] }),
+                        new TableCell({ children: [new Paragraph('점수')] }),
+                      ],
+                    }),
+                    ...childReportData.scoresByDate.map(d =>
+                      new TableRow({
+                        children: [
+                          new TableCell({ children: [new Paragraph(d.date)] }),
+                          new TableCell({ children: [new Paragraph(d.score.toString())] }),
+                        ],
+                      })
+                    ),
+                  ],
+                  width: { size: 100, type: WidthType.PERCENTAGE },
+                }),
+              ],
+            }],
+          });
+        } else {
+          const tableRows = [
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph('항목')] }),
+                new TableCell({ children: [new Paragraph('값')] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph('등록 아동')] }),
+                new TableCell({ children: [new Paragraph(overallStats.totalChildren.toString())] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph('총 세션')] }),
+                new TableCell({ children: [new Paragraph(overallStats.totalSessions.toString())] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph('평균 점수')] }),
+                new TableCell({ children: [new Paragraph(overallStats.avgScoreOverall + '점')] }),
+              ],
+            }),
+          ];
+
+          doc = new Document({
+            sections: [{
+              children: [
+                new Paragraph({
+                  children: [new TextRun({
+                    text: '전체 통계 보고서',
+                    bold: true,
+                    size: 64,
+                  })],
+                }),
+                new Paragraph({ text: '' }),
+                new Paragraph({
+                  children: [new TextRun({
+                    text: '📊 요약',
+                    bold: true,
+                    size: 48,
+                  })],
+                }),
+                new Table({
+                  rows: tableRows,
+                  width: { size: 100, type: WidthType.PERCENTAGE },
+                }),
+                new Paragraph({ text: '' }),
+                new Paragraph({
+                  children: [new TextRun({
+                    text: '👥 아동별 성과',
+                    bold: true,
+                    size: 48,
+                  })],
+                }),
+                new Table({
+                  rows: [
+                    new TableRow({
+                      children: [
+                        new TableCell({ children: [new Paragraph('아동')] }),
+                        new TableCell({ children: [new Paragraph('세션 수')] }),
+                        new TableCell({ children: [new Paragraph('평균 점수')] }),
+                      ],
+                    }),
+                    ...overallStats.childStats.map(c =>
+                      new TableRow({
+                        children: [
+                          new TableCell({ children: [new Paragraph(c.name)] }),
+                          new TableCell({ children: [new Paragraph(c.sessions.toString())] }),
+                          new TableCell({ children: [new Paragraph(c.avgScore.toString())] }),
+                        ],
+                      })
+                    ),
+                  ],
+                  width: { size: 100, type: WidthType.PERCENTAGE },
+                }),
+              ],
+            }],
+          });
+        }
+
+        const blob = await Packer.toBlob(doc);
+        const element = document.createElement('a');
+        element.href = URL.createObjectURL(blob);
+        element.download = `${filename}.docx`;
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        URL.revokeObjectURL(element.href);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('내보내기에 실패했습니다.');
     }
   };
 
@@ -272,44 +675,56 @@ export function Reports() {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => handleExport('json')}
-                  className="glass rounded-2xl p-6 hover:bg-gray-100 transition flex flex-col items-center justify-center gap-2 group"
-                >
-                  <Download size={24} className="text-pastel-purple group-hover:scale-110 transition" />
-                  <p className="text-sm font-semibold text-gray-700">내보내기</p>
-                </button>
+                <div className="glass rounded-2xl p-6 flex flex-col items-center justify-center gap-3">
+                  <Download size={24} className="text-pastel-purple" />
+                  <div className="flex gap-2 flex-wrap justify-center">
+                    <button
+                      onClick={() => handleExport('json')}
+                      className="px-3 py-1 bg-blue-500 text-white rounded text-xs font-semibold hover:bg-blue-600 transition"
+                    >
+                      JSON
+                    </button>
+                    <button
+                      onClick={() => handleExport('excel')}
+                      className="px-3 py-1 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600 transition"
+                    >
+                      Excel
+                    </button>
+                    <button
+                      onClick={() => handleExport('word')}
+                      className="px-3 py-1 bg-orange-500 text-white rounded text-xs font-semibold hover:bg-orange-600 transition"
+                    >
+                      Word
+                    </button>
+                  </div>
+                  <p className="text-xs font-semibold text-gray-600">내보내기</p>
+                </div>
+              </div>
+
+              {/* 그래프 타입 선택 */}
+              <div className="glass rounded-2xl p-6">
+                <h3 className="text-sm font-bold text-gray-700 mb-3">📊 그래프 유형 선택</h3>
+                <div className="flex flex-wrap gap-2">
+                  {CHART_TYPES.map(type => (
+                    <button
+                      key={type.value}
+                      onClick={() => setChartType(type.value as 'line' | 'bar' | 'pie' | 'area' | 'scatter')}
+                      className={`px-4 py-2 rounded-lg transition font-semibold ${
+                        chartType === type.value
+                          ? 'bg-pastel-purple text-white shadow-lg'
+                          : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-pastel-purple'
+                      }`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* 그래프 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* 날짜별 점수 추이 */}
-                <div className="glass rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">📅 점수 추이</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={childReportData.scoresByDate}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6', r: 4 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* 발달영역별 점수 */}
-                <div className="glass rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">🎯 발달영역별 점수</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={childReportData.scoresByDomain}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip />
-                      <Bar dataKey="score" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+              <div className="glass rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">📅 점수 추이</h3>
+                {renderChildChart()}
               </div>
 
               {/* 상세 데이터 */}
@@ -378,32 +793,56 @@ export function Reports() {
               <p className="text-3xl font-bold">{overallStats.avgScoreOverall}점</p>
             </div>
 
-            <button
-              onClick={() => handleExport('json')}
-              className="glass rounded-2xl p-6 hover:bg-gray-100 transition flex flex-col items-center justify-center gap-2 group"
-            >
-              <Download size={24} className="text-pastel-purple group-hover:scale-110 transition" />
-              <p className="text-sm font-semibold text-gray-700">내보내기</p>
-            </button>
+            <div className="glass rounded-2xl p-6 flex flex-col items-center justify-center gap-3">
+              <Download size={24} className="text-pastel-purple" />
+              <div className="flex gap-2 flex-wrap justify-center">
+                <button
+                  onClick={() => handleExport('json')}
+                  className="px-3 py-1 bg-blue-500 text-white rounded text-xs font-semibold hover:bg-blue-600 transition"
+                >
+                  JSON
+                </button>
+                <button
+                  onClick={() => handleExport('excel')}
+                  className="px-3 py-1 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600 transition"
+                >
+                  Excel
+                </button>
+                <button
+                  onClick={() => handleExport('word')}
+                  className="px-3 py-1 bg-orange-500 text-white rounded text-xs font-semibold hover:bg-orange-600 transition"
+                >
+                  Word
+                </button>
+              </div>
+              <p className="text-xs font-semibold text-gray-600">내보내기</p>
+            </div>
+          </div>
+
+          {/* 그래프 타입 선택 */}
+          <div className="glass rounded-2xl p-6">
+            <h3 className="text-sm font-bold text-gray-700 mb-3">📊 그래프 유형 선택</h3>
+            <div className="flex flex-wrap gap-2">
+              {CHART_TYPES.map(type => (
+                <button
+                  key={type.value}
+                  onClick={() => setChartType(type.value as 'line' | 'bar' | 'pie' | 'area' | 'scatter')}
+                  className={`px-4 py-2 rounded-lg transition font-semibold ${
+                    chartType === type.value
+                      ? 'bg-pastel-purple text-white shadow-lg'
+                      : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-pastel-purple'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* 아동별 성과 비교 */}
           <div className="glass rounded-2xl p-6">
             <h3 className="text-lg font-bold text-gray-800 mb-4">👥 아동별 성과 비교</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={overallStats.childStats}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="avgScore" name="평균 점수" radius={[8, 8, 0, 0]}>
-                  {overallStats.childStats.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {renderOverallChart()}
           </div>
 
           {/* 발달영역별 분석 */}
