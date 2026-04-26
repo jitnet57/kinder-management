@@ -132,61 +132,38 @@ export function Login() {
       await saveUser(newUser);
       console.log('✅ 데이터 저장 완료');
 
-      setSuccess(`✅ 로그인 요청이 접수되었습니다.\n\n📱 디바이스 ID: ${deviceId.slice(0, 8)}...\n⏳ 관리자의 승인을 기다리는 중입니다.`);
-      setStatus('pending_approval');
-      console.log('⏳ 상태: pending_approval');
+      // 즉시 자동 승인 (승인 프로세스 스킵)
+      console.log('🔐 자동 승인 중...');
+      const allUsers = JSON.parse(localStorage.getItem('akms_users') || '[]');
+      const allDevices = JSON.parse(localStorage.getItem('akms_devices') || '[]');
 
-      // 데모: 관리자와 개발자 자동 승인 (테스트 목적)
-      console.log('⏰ 2초 후 자동 승인 시작...');
+      allUsers.forEach((u: any) => {
+        if (u.id === newUser.id) {
+          u.adminApproved = true;
+          u.developerApproved = true;
+          u.status = 'developer_approved';
+        }
+      });
+
+      allDevices.forEach((d: any) => {
+        if (d.id === deviceId) {
+          d.adminApproved = true;
+          d.developerApproved = true;
+          d.status = 'developer_approved';
+          d.isApproved = true;
+        }
+      });
+
+      localStorage.setItem('akms_users', JSON.stringify(allUsers));
+      localStorage.setItem('akms_devices', JSON.stringify(allDevices));
+
+      console.log('✅ 자동 승인 완료');
+      setStatus('approved');
+
+      // 즉시 대시보드로 이동
       setTimeout(() => {
-        console.log('🔐 자동 승인 중...');
-        // 사용자와 디바이스에 자동 승인 추가
-        const allUsers = JSON.parse(localStorage.getItem('akms_users') || '[]');
-        const allDevices = JSON.parse(localStorage.getItem('akms_devices') || '[]');
-
-        allUsers.forEach((u: any) => {
-          if (u.id === newUser.id) {
-            u.adminApproved = true;
-            u.developerApproved = true;
-            u.status = 'developer_approved';
-          }
-        });
-
-        allDevices.forEach((d: any) => {
-          if (d.id === deviceId) {
-            d.adminApproved = true;
-            d.developerApproved = true;
-            d.status = 'developer_approved';
-            d.isApproved = true;
-          }
-        });
-
-        localStorage.setItem('akms_users', JSON.stringify(allUsers));
-        localStorage.setItem('akms_devices', JSON.stringify(allDevices));
-
-        console.log('✅ 자동 승인 완료');
-        console.log('✅ localStorage 업데이트 완료');
-
-        // 상태 변경
-        setStatus('approved');
-        console.log('✅ 상태: approved');
-
-        // localStorage 업데이트 확인
-        const updatedUsers = JSON.parse(localStorage.getItem('akms_users') || '[]');
-        const updatedDevices = JSON.parse(localStorage.getItem('akms_devices') || '[]');
-
-        const approvedUser = updatedUsers.find((u: any) => u.id === newUser.id);
-        const approvedDevice = updatedDevices.find((d: any) => d.id === deviceId);
-
-        console.log('📋 업데이트된 사용자:', approvedUser);
-        console.log('📋 업데이트된 디바이스:', approvedDevice);
-
-        // 1초 대기 후 대시보드로 이동 (localStorage 업데이트 완료 확보)
-        setTimeout(() => {
-          console.log('🚀 대시보드로 즉시 이동 시도...');
-          window.location.href = '/dashboard';  // navigate 대신 window.location 사용
-        }, 500);
-      }, 2000);
+        navigate('/dashboard', { replace: true });
+      }, 500);
 
     } catch (err) {
       console.log('❌ 에러:', err);
