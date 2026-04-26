@@ -1,0 +1,300 @@
+import { useState, useEffect } from 'react';
+import { Lock, AlertCircle, CheckCircle2, Loader } from 'lucide-react';
+import {
+  generateDeviceId,
+  getUserIpAddress,
+  getSavedDevice,
+  getSavedUser,
+  saveDevice,
+  saveUser,
+  verifyAccess,
+  Device,
+  User,
+} from '../utils/deviceManager';
+
+const ADMIN_USERS = [
+  {
+    email: 'admin@akms.com',
+    password: 'admin123',
+    name: '관리자',
+    role: 'admin' as const,
+  },
+];
+
+export function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [deviceInfo, setDeviceInfo] = useState<Device | null>(null);
+  const [status, setStatus] = useState<'initial' | 'device_register' | 'pending_approval' | 'approved'>('initial');
+
+  useEffect(() => {
+    checkExistingLogin();
+  }, []);
+
+  const checkExistingLogin = async () => {
+    const savedUser = getSavedUser();
+    const savedDevice = getSavedDevice();
+
+    if (savedUser && savedDevice) {
+      const isValid = await verifyAccess(savedUser.id, savedDevice.id);
+      if (isValid) {
+        window.location.href = '/';
+      } else {
+        setError('저장된 사용자 또는 디바이스가 승인되지 않았습니다.');
+      }
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // 사용자 인증
+      const user = ADMIN_USERS.find(u => u.email === email && u.password === password);
+
+      if (!user) {
+        setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+        setLoading(false);
+        return;
+      }
+
+      // 디바이스 정보 수집
+      const deviceId = generateDeviceId();
+      const ipAddress = await getUserIpAddress();
+
+      const newDevice: Device = {
+        id: deviceId,
+        name: `${navigator.platform} - ${new Date().toLocaleDateString()}`,
+        userAgent: navigator.userAgent,
+        ipAddress,
+        registeredAt: new Date().toISOString(),
+        lastUsedAt: new Date().toISOString(),
+        adminApproved: false,
+        developerApproved: false,
+        isApproved: false,
+        status: 'pending',
+      };
+
+      const newUser: User = {
+        id: `user-${Date.now()}`,
+        email,
+        name: user.name,
+        role: user.role,
+        registeredAt: new Date().toISOString(),
+        adminApproved: false,
+        developerApproved: false,
+        devices: [deviceId],
+        status: 'pending',
+      };
+
+      setDeviceInfo(newDevice);
+
+      // 저장 (아직 승인 안 됨)
+      await saveDevice(newDevice);
+      await saveUser(newUser);
+
+      setSuccess(`✅ 로그인 요청이 접수되었습니다.\n\n📱 디바이스 ID: ${deviceId.slice(0, 8)}...\n⏳ 관리자의 승인을 기다리는 중입니다.`);
+      setStatus('pending_approval');
+
+      // 데모: 관리자와 개발자 자동 승인 (테스트 목적)
+      // 실제 운영 환경에서는 이 코드 제거
+      setTimeout(() => {
+        // 사용자와 디바이스에 자동 승인 추가
+        const allUsers = JSON.parse(localStorage.getItem('akms_users') || '[]');
+        const allDevices = JSON.parse(localStorage.getItem('akms_devices') || '[]');
+
+        allUsers.forEach((u: any) => {
+          if (u.id === newUser.id) {
+            u.adminApproved = true;
+            u.developerApproved = true;
+            u.status = 'developer_approved';
+          }
+        });
+
+        allDevices.forEach((d: any) => {
+          if (d.id === deviceId) {
+            d.adminApproved = true;
+            d.developerApproved = true;
+            d.status = 'developer_approved';
+            d.isApproved = true;
+          }
+        });
+
+        localStorage.setItem('akms_users', JSON.stringify(allUsers));
+        localStorage.setItem('akms_devices', JSON.stringify(allDevices));
+
+        setStatus('approved');
+      }, 2000);
+
+    } catch (err) {
+      setError('로그인 중 오류가 발생했습니다.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (status === 'approved') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pastel-purple to-pastel-pink flex items-center justify-center p-4">
+        <div className="glass rounded-3xl p-12 max-w-md w-full text-center">
+          <CheckCircle2 size={64} className="mx-auto text-green-500 mb-6" />
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">승인 완료! 🎉</h2>
+          <p className="text-gray-600 mb-6">
+            디바이스가 승인되었습니다.<br />
+            시스템에 접근합니다...
+          </p>
+          <div className="animate-spin">
+            <Loader size={32} className="mx-auto text-pastel-purple" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'pending_approval') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pastel-purple to-pastel-pink flex items-center justify-center p-4">
+        <div className="glass rounded-3xl p-12 max-w-md w-full">
+          <AlertCircle size={64} className="mx-auto text-yellow-500 mb-6" />
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">승인 대기 중</h2>
+
+          <div className="bg-white bg-opacity-50 rounded-xl p-6 mb-6 space-y-3 text-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-pastel-purple mt-1.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-gray-800">사용자</p>
+                <p className="text-gray-600">{email}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-pastel-purple mt-1.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-gray-800">디바이스</p>
+                <p className="text-gray-600 break-all">{deviceInfo?.id.slice(0, 16)}...</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-pastel-purple mt-1.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-gray-800">IP 주소</p>
+                <p className="text-gray-600">{deviceInfo?.ipAddress}</p>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-gray-600 mb-6">
+            관리자가 이 디바이스와 사용자를 확인한 후<br />
+            승인하면 접근이 가능합니다.
+          </p>
+
+          <div className="space-y-2">
+            <button
+              onClick={() => window.location.href = '/admin/approvals'}
+              className="w-full px-4 py-3 bg-pastel-purple text-white rounded-lg font-semibold hover:bg-opacity-90 transition"
+            >
+              👨‍💼 관리자 승인 페이지
+            </button>
+            <button
+              onClick={() => {
+                setStatus('initial');
+                setEmail('');
+                setPassword('');
+                setSuccess('');
+              }}
+              className="w-full px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+            >
+              뒤로 가기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pastel-purple to-pastel-pink flex items-center justify-center p-4">
+      <div className="glass rounded-3xl p-12 max-w-md w-full">
+        <div className="flex items-center justify-center mb-8">
+          <Lock size={48} className="text-pastel-purple mr-3" />
+          <h1 className="text-4xl font-bold text-gray-800">AKMS</h1>
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">로그인</h2>
+        <p className="text-center text-gray-600 mb-8">
+          디바이스 인증 필수
+        </p>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 border-l-4 border-red-500 rounded text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 p-4 bg-green-100 border-l-4 border-green-500 rounded text-green-700 text-sm whitespace-pre-line">
+            {success}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              이메일
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@akms.com"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
+              disabled={loading}
+            />
+            <p className="text-xs text-gray-500 mt-1">테스트: admin@akms.com</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              비밀번호
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pastel-purple"
+              disabled={loading}
+            />
+            <p className="text-xs text-gray-500 mt-1">테스트: admin123</p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !email || !password}
+            className="w-full px-6 py-3 bg-pastel-purple text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {loading ? '처리 중...' : '로그인'}
+          </button>
+        </form>
+
+        <div className="mt-8 pt-8 border-t border-white border-opacity-30">
+          <p className="text-xs text-gray-600 text-center mb-4">
+            🔐 보안 정보
+          </p>
+          <div className="space-y-2 text-xs text-gray-600 bg-white bg-opacity-30 rounded-lg p-4">
+            <p>✓ 처음 로그인하면 디바이스 등록</p>
+            <p>✓ 관리자 승인 필수</p>
+            <p>✓ 승인된 디바이스만 접근 가능</p>
+            <p>✓ 모든 접근 기록 저장</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

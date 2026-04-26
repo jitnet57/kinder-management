@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
+import { getSavedUser, logout, User } from '../utils/deviceManager';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const location = useLocation();
+
+  useEffect(() => {
+    const savedUser = getSavedUser();
+    setUser(savedUser);
+  }, []);
 
   const navItems = [
     { label: '대시보드', path: '/' },
@@ -15,6 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: '커리큘럼', path: '/curriculum' },
     { label: '📊 보고서', path: '/reports' },
     { label: '📚 도움말', path: '/help' },
+    ...(user?.role === 'admin' ? [{ label: '👨‍💼 승인관리', path: '/admin/approvals' }] : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -37,8 +45,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="flex items-center gap-6">
-          <span className="text-sm text-gray-600">관리자 (admin)</span>
-          <button className="flex items-center gap-2 text-red-500 hover:bg-red-50 px-3 py-2 rounded">
+          <span className="text-sm text-gray-600">
+            {user?.name} ({user?.role})
+          </span>
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 text-red-500 hover:bg-red-50 px-3 py-2 rounded transition"
+          >
             <LogOut size={20} />
             <span className="text-sm">로그아웃</span>
           </button>

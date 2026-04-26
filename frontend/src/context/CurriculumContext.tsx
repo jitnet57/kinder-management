@@ -1,19 +1,27 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import curriculumData from '../data/curriculum.json';
 
 export interface STO {
   id: string;
   name: string;
+  description?: string;
+  order?: number;
 }
 
 export interface LTO {
   id: string;
   name: string;
+  order?: number;
+  goal?: string;
   stos: STO[];
+  teachingTips?: Record<string, string>;
 }
 
 export interface DevelopmentDomain {
   id: string;
   name: string;
+  description?: string;
+  color?: string;
   ltos: LTO[];
 }
 
@@ -62,53 +70,30 @@ interface CurriculumContextType {
 
 const CurriculumContext = createContext<CurriculumContextType | undefined>(undefined);
 
-const INITIAL_CURRICULUM: DevelopmentDomain[] = [
-  {
-    id: 'd1',
-    name: '언어발달',
-    ltos: [
-      {
-        id: 'l1',
-        name: '발음 능력 개발',
-        stos: [
-          { id: 's1', name: '기본 자음 발음' },
-          { id: 's2', name: '기본 모음 발음' },
-          { id: 's3', name: '어휘 확장' },
-        ],
-      },
-      {
-        id: 'l2',
-        name: '이해 능력 증진',
-        stos: [
-          { id: 's4', name: '지시 이해' },
-          { id: 's5', name: '질문 이해' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'd2',
-    name: '인지발달',
-    ltos: [
-      {
-        id: 'l3',
-        name: '색상 인식',
-        stos: [
-          { id: 's6', name: '기본색 구분' },
-          { id: 's7', name: '색상 이름 말하기' },
-        ],
-      },
-      {
-        id: 'l4',
-        name: '숫자 이해',
-        stos: [
-          { id: 's8', name: '1-10 숫자 인식' },
-          { id: 's9', name: '숫자 세기' },
-        ],
-      },
-    ],
-  },
-];
+// Convert imported curriculum data to DevelopmentDomain format
+const convertCurriculumData = (data: any): DevelopmentDomain[] => {
+  return data.domains.map((domain: any) => ({
+    id: domain.id,
+    name: domain.name,
+    description: domain.description,
+    color: domain.color,
+    ltos: domain.ltos.map((lto: any) => ({
+      id: lto.id,
+      name: lto.name,
+      order: lto.order,
+      goal: lto.goal,
+      teachingTips: lto.teachingTips,
+      stos: lto.stos.map((sto: any) => ({
+        id: sto.order ? `${lto.id}_sto${sto.order}` : `${lto.id}_${sto.name}`,
+        name: sto.name,
+        description: sto.description,
+        order: sto.order,
+      })),
+    })),
+  }));
+};
+
+const INITIAL_CURRICULUM: DevelopmentDomain[] = convertCurriculumData(curriculumData);
 
 // 샘플 세션 과제 생성
 const generateMockSessionTasks = (): SessionTask[] => {

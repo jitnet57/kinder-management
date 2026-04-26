@@ -3,6 +3,9 @@ import { CacheProvider } from './context/CacheContext';
 import { CurriculumProvider } from './context/CurriculumContext';
 import { ScheduleProvider } from './context/ScheduleContext';
 import { Layout } from './components/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Login } from './pages/Login';
+import { AdminApprovals } from './pages/AdminApprovals';
 import { Dashboard } from './pages/Dashboard';
 import { Schedule } from './pages/Schedule';
 import { Children } from './pages/Children';
@@ -18,74 +21,101 @@ function App() {
       <ScheduleProvider>
         <CacheProvider>
           <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Layout>
-                <Dashboard />
-              </Layout>
-            }
-          />
-          <Route
-            path="/schedule"
-            element={
-              <Layout>
-                <Schedule />
-              </Layout>
-            }
-          />
-          <Route
-            path="/children"
-            element={
-              <Layout>
-                <Children />
-              </Layout>
-            }
-          />
-          <Route
-            path="/session-log"
-            element={
-              <Layout>
-                <SessionLog />
-              </Layout>
-            }
-          />
-          <Route
-            path="/completion"
-            element={
-              <Layout>
-                <Completion />
-              </Layout>
-            }
-          />
-          <Route
-            path="/curriculum"
-            element={
-              <Layout>
-                <Curriculum />
-              </Layout>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <Layout>
-                <Reports />
-              </Layout>
-            }
-          />
-          <Route
-            path="/help"
-            element={
-              <Layout>
-                <Help />
-              </Layout>
-            }
-          />
-        </Routes>
-        </BrowserRouter>
-      </CacheProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+
+              <Route
+                path="/admin/approvals"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminApprovals />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/schedule"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Schedule />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/children"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Children />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/session-log"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <SessionLog />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/completion"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Completion />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/curriculum"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Curriculum />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Reports />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/help"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Help />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </CacheProvider>
       </ScheduleProvider>
     </CurriculumProvider>
   );
