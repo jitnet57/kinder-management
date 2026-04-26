@@ -14,6 +14,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: '완료목록', path: '/completion' },
     { label: '커리큘럼', path: '/curriculum' },
     { label: '📊 보고서', path: '/reports' },
+    { label: '📚 도움말', path: '/help' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

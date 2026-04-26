@@ -133,15 +133,15 @@ export function Completion() {
             </thead>
             <tbody>
               {filteredTasks.map(task => (
-                <tr key={task.id} className="border-b border-white border-opacity-20 hover:bg-white hover:bg-opacity-30 last:border-0 transition">
-                  <td className="px-6 py-4">
-                    <CheckCircle2 size={20} className="text-green-500" />
+                <tr key={task.id} className="border-b border-white border-opacity-20 hover:bg-white hover:bg-opacity-50 last:border-0 transition group">
+                  <td className="px-6 py-4 group-hover:text-green-600">
+                    <CheckCircle2 size={20} className="text-green-500 group-hover:text-green-700 transition" />
                   </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-800">{task.childId}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{getDomainName(task)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{getTaskName(task)}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-pastel-purple">{task.score}점</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-800 group-hover:text-gray-900">{task.childId}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700 group-hover:text-gray-900">{getDomainName(task)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700 group-hover:text-gray-900">{getTaskName(task)}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-pastel-purple group-hover:text-pastel-purple group-hover:drop-shadow-sm">{task.score}점</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 group-hover:text-gray-900">
                     {task.completedAt ? new Date(task.completedAt).toLocaleString('ko-KR') : '-'}
                   </td>
                 </tr>

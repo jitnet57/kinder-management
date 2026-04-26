@@ -10,6 +10,7 @@ import { SessionLog } from './pages/SessionLog';
 import { Completion } from './pages/Completion';
 import { Curriculum } from './pages/Curriculum';
 import { Reports } from './pages/Reports';
+import { Help } from './pages/Help';
 
 function App() {
   return (
@@ -71,6 +72,14 @@ function App() {
             element={
               <Layout>
                 <Reports />
+              </Layout>
+            }
+          />
+          <Route
+            path="/help"
+            element={
+              <Layout>
+                <Help />
               </Layout>
             }
           />

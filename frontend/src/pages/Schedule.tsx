@@ -229,17 +229,17 @@ export function Schedule() {
                                     <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition duration-200">
                                       <button
                                         onClick={() => setEditingSessionId(session.id)}
-                                        className="flex-1 px-1 py-0.5 bg-white bg-opacity-50 rounded text-xs hover:bg-opacity-70 font-semibold transition text-gray-800"
+                                        className="flex-1 px-1 py-0.5 bg-white bg-opacity-50 rounded text-xs hover:bg-opacity-70 font-semibold transition text-gray-800 group/edit hover:text-blue-600"
                                         title="수정"
                                       >
-                                        <Edit size={12} className="mx-auto" />
+                                        <Edit size={12} className="mx-auto group-hover/edit:text-white transition" />
                                       </button>
                                       <button
                                         onClick={() => deleteSession(session.id)}
-                                        className="flex-1 px-1 py-0.5 bg-white bg-opacity-50 rounded text-xs hover:bg-opacity-70 font-semibold transition text-gray-800"
+                                        className="flex-1 px-1 py-0.5 bg-white bg-opacity-50 rounded text-xs hover:bg-opacity-70 font-semibold transition text-gray-800 group/delete hover:text-red-600"
                                         title="삭제"
                                       >
-                                        <Trash2 size={12} className="mx-auto" />
+                                        <Trash2 size={12} className="mx-auto group-hover/delete:text-white transition" />
                                       </button>
                                     </div>
                                   </div>
@@ -247,14 +247,14 @@ export function Schedule() {
                               </div>
                             );
                           })}
-                          {daySessions.length === 0 && !showAddForm && (
-                            <button
-                              onClick={() => handleAddSession(dayIdx, slotIdx)}
-                              className="px-3 py-2 rounded-lg border-2 border-dashed border-gray-300 text-gray-400 text-xs hover:border-gray-400 hover:text-gray-600 transition"
-                            >
-                              <Plus size={16} className="mx-auto" />
-                            </button>
-                          )}
+                          {/* 추가 버튼 - 항상 표시 */}
+                          <button
+                            onClick={() => handleAddSession(dayIdx, slotIdx)}
+                            className="px-3 py-2 rounded-lg border-2 border-dashed border-gray-300 text-gray-400 text-xs hover:border-pastel-purple hover:text-white hover:bg-pastel-purple hover:bg-opacity-80 transition font-semibold group/add"
+                            title="새 세션 추가"
+                          >
+                            <Plus size={16} className="mx-auto group-hover/add:text-white transition" />
+                          </button>
                         </div>
                       </td>
                     );

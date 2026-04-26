@@ -364,14 +364,14 @@ export function Dashboard() {
       {/* 통계 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: '등록된 아동', value: stats.children, icon: '👧', color: 'from-pink-400 to-pink-500' },
-          { label: '이번 주 세션', value: stats.sessionsThisWeek, icon: '📝', color: 'from-blue-400 to-blue-500' },
-          { label: '완료율', value: `${stats.completionRate}%`, icon: '✅', color: 'from-green-400 to-green-500' },
-          { label: '활성 커리큘럼', value: stats.activeCurriculum, icon: '📚', color: 'from-purple-400 to-purple-500' },
+          { label: '등록된 아동', value: stats.children, icon: '👧', color: 'from-pink-400 to-pink-500', hoverColor: 'hover:from-pink-600 hover:to-pink-700' },
+          { label: '이번 주 세션', value: stats.sessionsThisWeek, icon: '📝', color: 'from-blue-400 to-blue-500', hoverColor: 'hover:from-blue-600 hover:to-blue-700' },
+          { label: '완료율', value: `${stats.completionRate}%`, icon: '✅', color: 'from-green-400 to-green-500', hoverColor: 'hover:from-green-600 hover:to-green-700' },
+          { label: '활성 커리큘럼', value: stats.activeCurriculum, icon: '📚', color: 'from-purple-400 to-purple-500', hoverColor: 'hover:from-purple-600 hover:to-purple-700' },
         ].map(stat => (
           <div
             key={stat.label}
-            className={`glass rounded-2xl p-6 bg-gradient-to-br ${stat.color} text-white hover:shadow-lg transition-all transform hover:scale-105 group relative`}
+            className={`glass rounded-2xl p-6 bg-gradient-to-br ${stat.color} ${stat.hoverColor} text-white hover:shadow-lg transition-all transform hover:scale-105 group relative`}
           >
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium opacity-90">{stat.label}</p>

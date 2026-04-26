@@ -149,9 +149,9 @@ export function SessionLog() {
             {!showAddForm && (
               <button
                 onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center gap-2 px-6 py-2 bg-pastel-purple text-white rounded-lg font-semibold hover:bg-opacity-90"
+                className="inline-flex items-center gap-2 px-6 py-2 bg-pastel-purple text-white rounded-lg font-semibold hover:bg-opacity-90 group/add"
               >
-                <Plus size={20} />
+                <Plus size={20} className="group-hover/add:scale-110 group-hover/add:rotate-90 transition" />
                 과제 추가
               </button>
             )}
@@ -183,15 +183,15 @@ export function SessionLog() {
                     </button>
                     <button
                       onClick={() => setEditingId(isEditing ? null : task.id)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition group/edit"
                     >
-                      <Edit size={20} className="text-gray-600" />
+                      <Edit size={20} className="text-gray-600 group-hover/edit:text-blue-600 transition" />
                     </button>
                     <button
                       onClick={() => deleteSessionTask(task.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg transition"
+                      className="p-2 hover:bg-red-50 rounded-lg transition group/delete"
                     >
-                      <Trash2 size={20} className="text-red-500" />
+                      <Trash2 size={20} className="text-red-500 group-hover/delete:text-red-700 transition" />
                     </button>
                   </div>
                 </div>
@@ -278,9 +278,9 @@ export function SessionLog() {
                       </button>
                       <button
                         onClick={() => handleCompleteTask(task.id)}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 group/complete"
                       >
-                        <CheckCircle2 size={18} />
+                        <CheckCircle2 size={18} className="group-hover/complete:scale-110 group-hover/complete:rotate-12 transition" />
                         완료
                       </button>
                     </>

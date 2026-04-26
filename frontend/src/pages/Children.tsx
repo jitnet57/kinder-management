@@ -169,9 +169,9 @@ export function Children() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 bg-pastel-purple text-white px-6 py-3 rounded-lg hover:bg-opacity-90 font-semibold transition"
+            className="flex items-center gap-2 bg-pastel-purple text-white px-6 py-3 rounded-lg hover:bg-opacity-90 font-semibold transition group/add"
           >
-            <Plus size={20} />
+            <Plus size={20} className="group-hover/add:scale-110 group-hover/add:rotate-90 transition" />
             새 아동
           </button>
         </div>
@@ -350,15 +350,15 @@ export function Children() {
                       <>
                         <button
                           onClick={() => handleStartEdit(child)}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition"
+                          className="p-2 hover:bg-gray-100 rounded-lg transition group/edit"
                         >
-                          <Edit size={18} className="text-gray-600" />
+                          <Edit size={18} className="text-gray-600 group-hover/edit:text-blue-600 transition" />
                         </button>
                         <button
                           onClick={() => handleDeleteChild(child.id)}
-                          className="p-2 hover:bg-red-50 rounded-lg transition"
+                          className="p-2 hover:bg-red-50 rounded-lg transition group/delete"
                         >
-                          <Trash2 size={18} className="text-red-500" />
+                          <Trash2 size={18} className="text-red-500 group-hover/delete:text-red-700 transition" />
                         </button>
                       </>
                     ) : null}

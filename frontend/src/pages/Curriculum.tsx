@@ -103,9 +103,9 @@ export function Curriculum() {
       ) : (
         <button
           onClick={() => setShowAddDomain(true)}
-          className="mb-8 flex items-center gap-2 bg-pastel-purple text-white px-6 py-3 rounded-lg hover:bg-opacity-90 font-semibold transition"
+          className="mb-8 flex items-center gap-2 bg-pastel-purple text-white px-6 py-3 rounded-lg hover:bg-opacity-90 font-semibold transition group/add"
         >
-          <Plus size={20} />
+          <Plus size={20} className="group-hover/add:scale-110 group-hover/add:rotate-90 transition" />
           발달영역 추가
         </button>
       )}
@@ -159,15 +159,15 @@ export function Curriculum() {
                         setEditingDomain(domain.id);
                         setEditingDomainName(domain.name);
                       }}
-                      className="p-2 hover:bg-white hover:bg-opacity-20 rounded transition"
+                      className="p-2 hover:bg-white hover:bg-opacity-20 rounded transition group/edit"
                     >
-                      <Edit size={18} />
+                      <Edit size={18} className="text-white group-hover/edit:text-blue-300 transition" />
                     </button>
                     <button
                       onClick={() => deleteDomain(domain.id)}
-                      className="p-2 hover:bg-white hover:bg-opacity-20 rounded transition"
+                      className="p-2 hover:bg-white hover:bg-opacity-20 rounded transition group/delete"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={18} className="text-white group-hover/delete:text-red-300 transition" />
                     </button>
                   </>
                 )}
@@ -217,15 +217,15 @@ export function Curriculum() {
                                 setEditingLTO(lto.id);
                                 setEditingLTOName(lto.name);
                               }}
-                              className="p-2 hover:bg-gray-200 rounded"
+                              className="p-2 hover:bg-gray-200 rounded group/edit"
                             >
-                              <Edit size={16} className="text-gray-600" />
+                              <Edit size={16} className="text-gray-600 group-hover/edit:text-blue-600 transition" />
                             </button>
                             <button
                               onClick={() => deleteLTO(domain.id, lto.id)}
-                              className="p-2 hover:bg-red-100 rounded"
+                              className="p-2 hover:bg-red-100 rounded group/delete"
                             >
-                              <Trash2 size={16} className="text-red-500" />
+                              <Trash2 size={16} className="text-red-500 group-hover/delete:text-red-700 transition" />
                             </button>
                           </>
                         )}
@@ -275,15 +275,15 @@ export function Curriculum() {
                                     setEditingSTO(sto.id);
                                     setEditingSTOName(sto.name);
                                   }}
-                                  className="p-1 hover:bg-gray-100 rounded"
+                                  className="p-1 hover:bg-gray-100 rounded group/edit"
                                 >
-                                  <Edit size={14} className="text-gray-400" />
+                                  <Edit size={14} className="text-gray-400 group-hover/edit:text-blue-500 transition" />
                                 </button>
                                 <button
                                   onClick={() => deleteSTO(domain.id, lto.id, sto.id)}
-                                  className="p-1 hover:bg-red-50 rounded"
+                                  className="p-1 hover:bg-red-50 rounded group/delete"
                                 >
-                                  <Trash2 size={14} className="text-red-400" />
+                                  <Trash2 size={14} className="text-red-400 group-hover/delete:text-red-600 transition" />
                                 </button>
                               </>
                             )}
@@ -320,9 +320,9 @@ export function Curriculum() {
                       ) : (
                         <button
                           onClick={() => setAddingSTO(lto.id)}
-                          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold ml-6"
+                          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold ml-6 group/add"
                         >
-                          <Plus size={16} />
+                          <Plus size={16} className="group-hover/add:scale-110 group-hover/add:rotate-90 transition" />
                           STO 추가
                         </button>
                       )}
@@ -358,9 +358,9 @@ export function Curriculum() {
                   ) : (
                     <button
                       onClick={() => setAddingLTO(domain.id)}
-                      className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-semibold ml-4"
+                      className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-semibold ml-4 group/add"
                     >
-                      <Plus size={16} />
+                      <Plus size={16} className="group-hover/add:scale-110 group-hover/add:rotate-90 transition" />
                       LTO 추가
                     </button>
                   )}

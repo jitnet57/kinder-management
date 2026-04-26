@@ -216,23 +216,23 @@ export function ChildDetailView({ child, onBack }: ChildDetailViewProps) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleShowGraph(task)}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition text-sm"
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition text-sm group/graph"
                         >
-                          <BarChart3 size={16} />
+                          <BarChart3 size={16} className="group-hover/graph:scale-110 group-hover/graph:rotate-12 transition" />
                           그래프
                         </button>
                         <button
                           onClick={() => handleEditTask(task)}
-                          className="flex items-center gap-2 px-4 py-2 bg-pastel-purple text-white rounded-lg hover:bg-opacity-90 font-semibold transition text-sm"
+                          className="flex items-center gap-2 px-4 py-2 bg-pastel-purple text-white rounded-lg hover:bg-opacity-90 font-semibold transition text-sm group/edit"
                         >
-                          <Edit2 size={16} />
+                          <Edit2 size={16} className="group-hover/edit:scale-110 group-hover/edit:-rotate-12 transition" />
                           수정
                         </button>
                         <button
                           onClick={() => handleDeleteTask(task.id)}
-                          className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold transition text-sm"
+                          className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold transition text-sm group/delete"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={16} className="group-hover/delete:scale-110 group-hover/delete:rotate-12 transition" />
                           삭제
                         </button>
                       </div>
