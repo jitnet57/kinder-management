@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Edit, Trash2, Save, Plus, CheckCircle2 } from 'lucide-react';
+import { BarChart3, Edit, Trash2, Save, Plus, CheckCircle2, Eye, X } from 'lucide-react';
 import { useCurriculum } from '../context/CurriculumContext';
 import { TaskGraphModal } from '../components/TaskGraphModal';
 
@@ -20,6 +20,8 @@ export function SessionLog() {
   const currentLTO = currentDomain && selectedLTO ? currentDomain.ltos.find(l => l.id === selectedLTO) : null;
   const [showGraphModal, setShowGraphModal] = useState(false);
   const [selectedGraphTaskId, setSelectedGraphTaskId] = useState<string>('');
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedDetailTaskId, setSelectedDetailTaskId] = useState<string>('');
 
   const handleAddTask = () => {
     if (selectedDomain && selectedLTO && selectedSTO) {
@@ -38,6 +40,11 @@ export function SessionLog() {
   const handleOpenGraph = (taskId: string) => {
     setSelectedGraphTaskId(taskId);
     setShowGraphModal(true);
+  };
+
+  const handleOpenDetail = (taskId: string) => {
+    setSelectedDetailTaskId(taskId);
+    setShowDetailModal(true);
   };
 
   return (
@@ -175,6 +182,13 @@ export function SessionLog() {
                   </div>
                   <div className="flex gap-2">
                     <button
+                      onClick={() => handleOpenDetail(task.id)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition group"
+                      title="상세보기"
+                    >
+                      <Eye size={20} className="text-gray-600 group-hover:text-pastel-purple group-hover:scale-110 transition" />
+                    </button>
+                    <button
                       onClick={() => handleOpenGraph(task.id)}
                       className="p-2 hover:bg-gray-100 rounded-lg transition group"
                       title="그래프 보기"
@@ -184,12 +198,14 @@ export function SessionLog() {
                     <button
                       onClick={() => setEditingId(isEditing ? null : task.id)}
                       className="p-2 hover:bg-gray-100 rounded-lg transition group/edit"
+                      title="수정"
                     >
                       <Edit size={20} className="text-gray-600 group-hover/edit:text-blue-600 transition" />
                     </button>
                     <button
                       onClick={() => deleteSessionTask(task.id)}
                       className="p-2 hover:bg-red-50 rounded-lg transition group/delete"
+                      title="삭제"
                     >
                       <Trash2 size={20} className="text-red-500 group-hover/delete:text-red-700 transition" />
                     </button>
@@ -321,6 +337,91 @@ export function SessionLog() {
         taskId={selectedGraphTaskId}
         childId={selectedChild}
       />
+
+      {/* 상세보기 모달 */}
+      {showDetailModal && (() => {
+        const task = childTasks.find(t => t.id === selectedDetailTaskId);
+        if (!task) return null;
+
+        const domain = domains.find(d => d.id === task.domainId);
+        const lto = domain?.ltos.find(l => l.id === task.ltoId);
+        const sto = lto?.stos.find(s => s.id === task.stoId);
+
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="glass rounded-2xl p-8 max-w-2xl w-full max-h-96 overflow-y-auto">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">{sto?.name}</h2>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {domain?.name} → {lto?.name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <X size={24} className="text-gray-600" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">시작 시간</p>
+                  <p className="text-sm font-bold text-gray-800">{task.startTime}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">종료 시간</p>
+                  <p className="text-sm font-bold text-gray-800">{task.endTime}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">성과 점수</p>
+                  <p className="text-2xl font-bold text-pastel-purple">{task.score}%</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">기록 날짜</p>
+                  <p className="text-sm font-bold text-gray-800">{task.date}</p>
+                </div>
+              </div>
+
+              {task.notes && (
+                <div className="mb-6">
+                  <p className="text-xs font-semibold text-gray-600 mb-2">비고</p>
+                  <p className="text-sm text-gray-700 bg-white bg-opacity-40 rounded-lg p-3">
+                    {task.notes}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4 border-t border-white border-opacity-30">
+                <button
+                  onClick={() => setEditingId(task.id)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 group/edit"
+                >
+                  <Edit size={18} className="group-hover/edit:text-white" />
+                  수정
+                </button>
+                <button
+                  onClick={() => {
+                    deleteSessionTask(task.id);
+                    setShowDetailModal(false);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 group/delete"
+                >
+                  <Trash2 size={18} className="group-hover/delete:text-white" />
+                  삭제
+                </button>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
