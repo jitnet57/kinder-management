@@ -83,7 +83,7 @@ export function ABCAnalysis() {
               sessionTaskId="new-session"
               ltoId="domain_mand_lto01"
               stoId="domain_mand_lto01_sto1"
-              onClose={() => {}}
+              onClose={() => setActiveTab('history')}
             />
           </div>
         )}
