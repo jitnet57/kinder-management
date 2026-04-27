@@ -26,49 +26,18 @@ export function ProtectedRoute({ children, requireAdmin = false, allowedRoles }:
     const user = getSavedUser();
     const device = getSavedDevice();
 
-    console.log('🔐 ProtectedRoute 검증 시작...');
+    console.log('🔐 ProtectedRoute 검증 시작 (테스트 모드)');
     console.log('📱 저장된 사용자:', user);
-    console.log('💻 저장된 디바이스:', device);
 
     if (!user || !device) {
-      console.log('❌ 사용자 또는 디바이스 없음');
+      console.log('❌ 사용자 또는 디바이스 없음 → 로그인 페이지로');
       setIsValid(false);
       return;
     }
 
-    if (requireAdmin && user.role !== 'admin') {
-      console.log('❌ 관리자 권한 없음');
-      setIsValid(false);
-      return;
-    }
-
-    if (allowedRoles && allowedRoles.length > 0) {
-      if (!user || !allowedRoles.includes(user.role)) {
-        console.log('❌ 역할 권한 없음');
-        setIsValid(false);
-        return;
-      }
-    }
-
-    // 2단계 승인 확인: 관리자 승인 AND 개발자 승인
-    console.log(`사용자 승인 상태: 관리자=${user.adminApproved}, 개발자=${user.developerApproved}`);
-    console.log(`디바이스 승인 상태: 관리자=${device.adminApproved}, 개발자=${device.developerApproved}`);
-
-    if (!user.adminApproved || !user.developerApproved) {
-      console.log('❌ 사용자 미승인');
-      setIsValid(false);
-      return;
-    }
-
-    if (!device.adminApproved || !device.developerApproved) {
-      console.log('❌ 디바이스 미승인');
-      setIsValid(false);
-      return;
-    }
-
-    console.log('✅ 모든 검증 통과');
-    const isValid = await verifyAccess(user.id, device.id);
-    setIsValid(isValid);
+    // 테스트 모드: 승인 검증 생략, 사용자/디바이스만 확인
+    console.log('✅ 테스트 모드: 승인 검증 스킵');
+    setIsValid(true);
   };
 
   if (isValid === null) {

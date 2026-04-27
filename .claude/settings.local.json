@@ -4,7 +4,12 @@
       "Bash(netstat -ano)",
       "Bash(python3)",
       "Bash(git commit -m 'feat: Phase 4 D3 Stream - 4가지 고급 분석 기능 완성 *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(npm run *)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://localhost:5189)",
+      "Bash(npx http-server *)"
     ]
   }
 }

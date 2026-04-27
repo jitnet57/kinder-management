@@ -125,38 +125,40 @@ export function Login() {
       await saveUser(newUser);
       console.log('✅ 데이터 저장 완료');
 
-      // 즉시 자동 승인 (승인 프로세스 스킵)
-      console.log('🔐 자동 승인 중...');
+      // 즉시 승인된 상태로 저장 (승인 프로세스 완전 스킵)
+      console.log('⚡ 테스트 모드: 승인 없이 즉시 진입');
+
+      const approvedUser = {
+        ...newUser,
+        adminApproved: true,
+        developerApproved: true,
+        status: 'approved'
+      };
+
+      const approvedDevice = {
+        ...newDevice,
+        adminApproved: true,
+        developerApproved: true,
+        isApproved: true,
+        status: 'approved'
+      };
+
       const allUsers = JSON.parse(localStorage.getItem('akms_users') || '[]');
       const allDevices = JSON.parse(localStorage.getItem('akms_devices') || '[]');
 
-      allUsers.forEach((u: any) => {
-        if (u.id === newUser.id) {
-          u.adminApproved = true;
-          u.developerApproved = true;
-          u.status = 'developer_approved';
-        }
-      });
-
-      allDevices.forEach((d: any) => {
-        if (d.id === deviceId) {
-          d.adminApproved = true;
-          d.developerApproved = true;
-          d.status = 'developer_approved';
-          d.isApproved = true;
-        }
-      });
+      allUsers.push(approvedUser);
+      allDevices.push(approvedDevice);
 
       localStorage.setItem('akms_users', JSON.stringify(allUsers));
       localStorage.setItem('akms_devices', JSON.stringify(allDevices));
 
-      console.log('✅ 자동 승인 완료');
+      console.log('✅ 승인된 상태로 저장 완료');
       setStatus('approved');
 
       // 즉시 대시보드로 이동
       setTimeout(() => {
         navigate('/dashboard', { replace: true });
-      }, 500);
+      }, 100);
 
     } catch (err) {
       console.log('❌ 에러:', err);
