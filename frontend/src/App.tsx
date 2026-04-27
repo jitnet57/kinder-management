@@ -293,14 +293,67 @@ function App() {
                 }
               />
 
-              {/* Phase 5 Stream P2: 5가지 고급 기능 라우트 (향후 구현) */}
-              {/*
-              <Route path="/live-session" element={<LiveSession />} />
-              <Route path="/video-analyzer" element={<VideoAnalyzer />} />
-              <Route path="/notifications/settings" element={<SmartNotificationSettings />} />
-              <Route path="/statistics/analysis" element={<StatisticalAnalysis />} />
-              <Route path="/settings/language" element={<LanguageSettings />} />
-              */}
+              {/* Phase 5 Stream P2: 5가지 고급 기능 라우트 */}
+              <Route
+                path="/live-session"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Suspense fallback={<PageLoader />}>
+                        <LiveSession />
+                      </Suspense>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/video-analyzer"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Suspense fallback={<PageLoader />}>
+                        <VideoAnalyzer />
+                      </Suspense>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/smart-notification-settings"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Suspense fallback={<PageLoader />}>
+                        <SmartNotificationSettings />
+                      </Suspense>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/statistical-analysis"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Suspense fallback={<PageLoader />}>
+                        <StatisticalAnalysis />
+                      </Suspense>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/language-settings"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Suspense fallback={<PageLoader />}>
+                        <LanguageSettings />
+                      </Suspense>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
                               </BrowserRouter>
                             </LanguageProvider>
