@@ -3,7 +3,7 @@ import type { Config } from '@cloudflare/pages';
 export default {
   build: {
     cwd: 'frontend',
-    command: 'npm run build',
+    command: 'npm install && npm run build',
     root_dir: 'dist'
   },
   env: {
