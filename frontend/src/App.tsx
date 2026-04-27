@@ -42,12 +42,12 @@ const BehaviorPrediction = lazy(() => import('./pages/BehaviorPrediction').then(
 const LearningVelocity = lazy(() => import('./pages/LearningVelocity').then(m => ({ default: m.LearningVelocity })));
 const AutoInsights = lazy(() => import('./pages/AutoInsights').then(m => ({ default: m.AutoInsights })));
 
-// Phase 5 Stream P2: 5가지 고급 기능 페이지 (향후 구현)
-// const LiveSession = lazy(() => import('./pages/LiveSession').then(m => ({ default: m.LiveSession })));
-// const VideoAnalyzer = lazy(() => import('./pages/VideoAnalyzer').then(m => ({ default: m.VideoAnalyzer })));
-// const SmartNotificationSettings = lazy(() => import('./pages/SmartNotificationSettings').then(m => ({ default: m.SmartNotificationSettings })));
-// const StatisticalAnalysis = lazy(() => import('./pages/StatisticalAnalysis').then(m => ({ default: m.StatisticalAnalysis })));
-// const LanguageSettings = lazy(() => import('./pages/LanguageSettings').then(m => ({ default: m.LanguageSettings })));
+// Phase 5 Stream P2: 5가지 고급 기능 페이지
+const LiveSession = lazy(() => import('./pages/LiveSession').then(m => ({ default: m.LiveSession })));
+const VideoAnalyzer = lazy(() => import('./pages/VideoAnalyzer').then(m => ({ default: m.VideoAnalyzer })));
+const SmartNotificationSettings = lazy(() => import('./pages/SmartNotificationSettings').then(m => ({ default: m.SmartNotificationSettings })));
+const StatisticalAnalysis = lazy(() => import('./pages/StatisticalAnalysis').then(m => ({ default: m.StatisticalAnalysis })));
+const LanguageSettings = lazy(() => import('./pages/LanguageSettings').then(m => ({ default: m.LanguageSettings })));
 
 // 로딩 중 표시할 간단한 스피너 컴포넌트
 const PageLoader = () => (
